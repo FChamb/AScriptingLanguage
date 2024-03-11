@@ -1,5 +1,7 @@
 module Expr where
 
+import Text.Read
+
 import Parsing
 
 type Name = String
@@ -14,6 +16,7 @@ data Expr = Add Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
           | ToString Expr
+          | ToInt Expr
           | Concat Expr Expr
           | Val Value
   deriving Show
@@ -58,6 +61,12 @@ eval vars (ToString e) = do
         StrVal s -> StrVal s
         IntVal i -> StrVal (show i))
 
+eval vars (ToInt e) = do
+    value <- eval vars e
+    case value of
+        StrVal s -> readMaybe s >>= Just . IntVal
+        IntVal i -> return (IntVal i)
+
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i
 intVal _ = Nothing
@@ -94,12 +103,22 @@ pFactor = do i <- integer
              return (Val (IntVal (i)))
            ||| do s <- quotedString
                   return (Val (StrVal s))
-                  ||| do v <- identifier
-                         error "Variables not yet implemented"
-                       ||| do symbol "("
+                  ||| do symbol "toString"
+                         string "("
+                         e <- pExpr
+                         string ")"
+                         return (ToString e)
+                       ||| do symbol "toInt"
+                              string "("
                               e <- pExpr
-                              symbol ")"
-                              return e
+                              string ")"
+                              return (ToInt e)
+                            ||| do symbol "("
+                                   e <- pExpr
+                                   symbol ")"
+                                   return e
+                                   ||| do v <- identifier
+                                          error "Variables not yet implemented"
 
 pTerm :: Parser Expr
 pTerm = do f <- pFactor
