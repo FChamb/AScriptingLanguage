@@ -20,7 +20,10 @@ eval :: [(Name, Int)] -> -- Variable name to value mapping
         Expr -> -- Expression to evaluate
         Maybe Int -- Result (if no errors such as missing variables)
 eval vars (Val x) = Just x -- for values, just give the value directly
-eval vars (Add x y) = undefined -- return an error (because it's not implemented yet!)
+eval vars (Add x y) = do -- return an error (because it's not implemented yet!)
+    xEvaled <- eval vars x
+    yEvaled <- eval vars y
+    return (xEvaled + yEvaled)
 eval vars (ToString x) = undefined
 
 digitToInt :: Char -> Int
