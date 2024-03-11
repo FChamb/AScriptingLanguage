@@ -36,10 +36,12 @@ process st (Set var e) = do
                 Nothing -> st -- print bad ????
     repl st'
 
-process st (Print e)
-     = do return (print (eval (vars st) e))
-          -- Print the result of evaluation
-          repl st
+process st (Print e) = do
+    case eval (vars st) e of
+        Just evaled -> print evaled
+        Nothing -> return ()
+    -- Print the result of evaluation
+    repl st
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls

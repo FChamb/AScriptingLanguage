@@ -7,7 +7,10 @@ import Parsing
 type Name = String
 
 data Value = IntVal Int | StrVal String
-    deriving Show
+
+instance Show Value where
+    show (IntVal i) = show i
+    show (StrVal s) = s
 
 -- At first, 'Expr' contains only addition, conversion to strings, and integer
 -- values. You will need to add other operations, and variables
@@ -86,6 +89,10 @@ pCommand = do t <- identifier
                    space
                    e <- pExpr
                    return (Print e)
+                 ||| do string "input"
+                        space
+                        t <- identifier
+                        return (Input t)
 
 pExpr :: Parser Expr
 pExpr = do t <- pTerm
