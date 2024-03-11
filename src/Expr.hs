@@ -19,6 +19,7 @@ data Expr = Add Expr Expr
           | ToInt Expr
           | Concat Expr Expr
           | Val Value
+          | Var Name
   deriving Show
 
 -- These are the REPL commands
@@ -30,6 +31,7 @@ eval :: [(Name, Value)] -> -- Variable name to value mapping
         Expr -> -- Expression to evaluate
         Maybe Value -- Result (if no errors such as missing variables)
 eval vars (Val x) = Just x -- for values, just give the value directly
+eval vars (Var name) = lookup name vars -- for values, just give the value directly
 eval vars (Add x y) = do -- return an error (because it's not implemented yet!)
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
@@ -118,7 +120,7 @@ pFactor = do i <- integer
                                    symbol ")"
                                    return e
                                    ||| do v <- identifier
-                                          error "Variables not yet implemented"
+                                          return (Var v)
 
 pTerm :: Parser Expr
 pTerm = do f <- pFactor
