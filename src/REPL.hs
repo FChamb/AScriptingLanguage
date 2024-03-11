@@ -32,10 +32,11 @@ process :: LState -> Command -> IO ()
 process st (Set var e) = do
     let evaled = eval (vars st) e
     let st' = case evaled of
-                Just x -> st'{vars= (updateVars var x (vars st))}
+                Just x -> st{vars= (updateVars var x (vars st))}
                 Nothing -> st -- print bad ????
     repl st'
-process st (Print e) 
+
+process st (Print e)
      = do return (show (eval (vars st) e))
           -- Print the result of evaluation
           repl st
@@ -46,7 +47,8 @@ process st (Print e)
 -- 'process' will call 'repl' when done, so the system loops.
 
 repl :: LState -> IO ()
-repl st = do putStr ("> ")
+repl st = do print (vars st)
+             putStr ("> ")
              inp <- getLine
              case parse pCommand inp of
                   [(cmd, "")] -> -- Must parse entire input
