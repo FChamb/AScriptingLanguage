@@ -14,6 +14,7 @@ data Expr = Add Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
           | ToString Expr
+          | Concat Expr Expr
           | Val Value
   deriving Show
 
@@ -46,6 +47,11 @@ eval vars (Div x y) = do -- return an error (because it's not implemented yet!)
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt `div` yInt))
 
+eval vars (Concat a b) = do
+    aStr <- eval vars a >>= strVal
+    bStr <- eval vars b >>= strVal
+    return (StrVal (aStr ++ bStr))
+
 eval vars (ToString e) = do
     value <- eval vars e
     return (case value of
@@ -55,6 +61,10 @@ eval vars (ToString e) = do
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i
 intVal _ = Nothing
+
+strVal :: Value -> Maybe String
+strVal (StrVal s) = Just s
+strVal _ = Nothing
 
 pCommand :: Parser Command
 pCommand = do t <- identifier
@@ -74,17 +84,22 @@ pExpr = do t <- pTerm
             ||| do symbol "-"
                    e <- pExpr
                    return (Sub t e)
-                 ||| return t
+                 ||| do symbol "++"
+                        e <- pExpr
+                        return (Concat t e)
+                    ||| return t
 
 pFactor :: Parser Expr
 pFactor = do i <- integer
              return (Val (IntVal (i)))
-           ||| do v <- identifier
-                  error "Variables not yet implemented" 
-                ||| do symbol "("
-                       e <- pExpr
-                       symbol ")"
-                       return e
+           ||| do s <- quotedString
+                  return (Val (StrVal s))
+                  ||| do v <- identifier
+                         error "Variables not yet implemented"
+                       ||| do symbol "("
+                              e <- pExpr
+                              symbol ")"
+                              return e
 
 pTerm :: Parser Expr
 pTerm = do f <- pFactor
@@ -95,3 +110,12 @@ pTerm = do f <- pFactor
                    t <- pTerm
                    return (Div f t)
                  ||| return f
+
+quotedString :: Parser String
+quotedString = do
+        char '"'
+        s <- many notQuote
+        char '"'
+        return s
+
+notQuote = sat (\x -> x /= '"')
