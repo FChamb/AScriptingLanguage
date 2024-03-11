@@ -36,22 +36,22 @@ eval :: [(Name, Value)] -> -- Variable name to value mapping
         Maybe Value -- Result (if no errors such as missing variables)
 eval vars (Val x) = Just x -- for values, just give the value directly
 eval vars (Var name) = lookup name vars -- for values, just give the value directly
-eval vars (Add x y) = do -- return an error (because it's not implemented yet!)
+eval vars (Add x y) = do
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt + yInt))
 
-eval vars (Sub x y) = do -- return an error (because it's not implemented yet!)
+eval vars (Sub x y) = do
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt - yInt))
 
-eval vars (Mul x y) = do -- return an error (because it's not implemented yet!)
+eval vars (Mul x y) = do
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt * yInt))
 
-eval vars (Div x y) = do -- return an error (because it's not implemented yet!)
+eval vars (Div x y) = do
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt `div` yInt))
