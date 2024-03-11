@@ -36,6 +36,12 @@ process st (Set var e) = do
                 Nothing -> st -- print bad ????
     repl st'
 
+process st (InputSet var) = do
+    input <- getLine
+    let newVars = updateVars var (StrVal input) (vars st)
+    let st' = st { vars = newVars }
+    repl st'
+
 process st (Print e) = do
     case eval (vars st) e of
         Just evaled -> print evaled

@@ -28,6 +28,7 @@ data Expr = Add Expr Expr
 -- These are the REPL commands
 data Command = Set Name Expr -- assign an expression to a variable name
              | Print Expr    -- evaluate an expression and print the result
+             | InputSet Name -- Prompt for input and store into variable
   deriving Show
 
 eval :: [(Name, Value)] -> -- Variable name to value mapping
@@ -83,16 +84,14 @@ strVal _ = Nothing
 pCommand :: Parser Command
 pCommand = do t <- identifier
               symbol "="
-              e <- pExpr
-              return (Set t e)
+              do symbol "input"
+                 return (InputSet t)
+               ||| do e <- pExpr
+                      return (Set t e)
             ||| do string "print"
                    space
                    e <- pExpr
                    return (Print e)
-                 ||| do string "input"
-                        space
-                        t <- identifier
-                        return (Input t)
 
 pExpr :: Parser Expr
 pExpr = do t <- pTerm
