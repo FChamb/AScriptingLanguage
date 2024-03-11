@@ -10,6 +10,9 @@ data Value = IntVal Int | StrVal String
 -- At first, 'Expr' contains only addition, conversion to strings, and integer
 -- values. You will need to add other operations, and variables
 data Expr = Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Div Expr Expr
           | ToString Expr
           | Val Value
   deriving Show
@@ -27,6 +30,21 @@ eval vars (Add x y) = do -- return an error (because it's not implemented yet!)
     xInt <- eval vars x >>= intVal
     yInt <- eval vars y >>= intVal
     return (IntVal (xInt + yInt))
+
+eval vars (Sub x y) = do -- return an error (because it's not implemented yet!)
+    xInt <- eval vars x >>= intVal
+    yInt <- eval vars y >>= intVal
+    return (IntVal (xInt - yInt))
+
+eval vars (Mul x y) = do -- return an error (because it's not implemented yet!)
+    xInt <- eval vars x >>= intVal
+    yInt <- eval vars y >>= intVal
+    return (IntVal (xInt * yInt))
+
+eval vars (Div x y) = do -- return an error (because it's not implemented yet!)
+    xInt <- eval vars x >>= intVal
+    yInt <- eval vars y >>= intVal
+    return (IntVal (xInt `div` yInt))
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -55,7 +73,7 @@ pExpr = do t <- pTerm
               return (Add t e)
             ||| do symbol "-"
                    e <- pExpr
-                   error "Subtraction not yet implemented!" 
+                   return (Sub t e)
                  ||| return t
 
 pFactor :: Parser Expr
@@ -72,8 +90,8 @@ pTerm :: Parser Expr
 pTerm = do f <- pFactor
            do symbol "*"
               t <- pTerm
-              error "Multiplication not yet implemented" 
+              return (Mul f t)
             ||| do symbol "/"
                    t <- pTerm
-                   error "Division not yet implemented" 
+                   return (Div f t)
                  ||| return f
