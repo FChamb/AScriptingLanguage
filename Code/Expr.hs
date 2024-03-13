@@ -20,6 +20,7 @@ data Expr = Add Expr Expr
           | Div Expr Expr
           | Abs Expr
           | Mod Expr Expr
+          | Pow Expr Expr 
           | ToString Expr
           | ToInt Expr
           | Concat Expr Expr
@@ -71,6 +72,11 @@ eval vars (Mod x y) = do
     dividend <- eval vars x >>= intVal
     divisor <- eval vars y >>= intVal
     return (IntVal (dividend `mod` divisor))
+
+eval vars (Pow x y) = do
+    base <- eval vars x >>= intVal
+    exp <- eval vars y >>= intVal
+    return (IntVal (base^exp)) -- Will need to change to ** after floating point nums are implemented
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -155,7 +161,10 @@ pTerm = do f <- pFactor
                  ||| do symbol "mod"
                         t <- pFactor
                         return (Mod f t)
-                      ||| return f
+                     ||| do symbol "^"
+                            t <- pFactor
+                            return (Pow f t)
+                         ||| return f
 
 quotedString :: Parser String
 quotedString = do
