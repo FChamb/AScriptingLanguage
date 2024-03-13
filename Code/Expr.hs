@@ -21,6 +21,7 @@ data Expr = Add Expr Expr
           | Abs Expr
           | Mod Expr Expr
           | Pow Expr Expr 
+          | Sqrt Expr
           | ToString Expr
           | ToInt Expr
           | Concat Expr Expr
@@ -77,6 +78,10 @@ eval vars (Pow x y) = do
     base <- eval vars x >>= intVal
     exp <- eval vars y >>= intVal
     return (IntVal (base^exp)) -- Will need to change to ** after floating point nums are implemented
+
+{- eval vars (Sqrt a) = do 
+    val <- eval vars a >>= intVal
+    return (IntVal (val)) -}
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -143,12 +148,17 @@ pFactor = do i <- integer
                                   e <- pExpr
                                   string ")"
                                   return (Abs e)
-                               ||| do symbol "("
-                                      e <- pExpr
-                                      symbol ")"
-                                      return e
-                                   ||| do v <- identifier
-                                          return (Var v)
+                                {- ||| do symbol "sqrt"
+                                       string "("
+                                       e <- pExpr
+                                       string ")"
+                                       return (Sqrt e) -}
+                                    ||| do symbol "("
+                                           e <- pExpr
+                                           symbol ")"
+                                           return e
+                                        ||| do v <- identifier
+                                               return (Var v)
 
 pTerm :: Parser Expr
 pTerm = do f <- pFactor
