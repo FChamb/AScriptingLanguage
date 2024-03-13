@@ -18,6 +18,7 @@ data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
+          | Abs Expr
           | ToString Expr
           | ToInt Expr
           | Concat Expr Expr
@@ -60,6 +61,12 @@ eval vars (Concat a b) = do
     aStr <- eval vars a >>= strVal
     bStr <- eval vars b >>= strVal
     return (StrVal (aStr ++ bStr))
+
+eval vars (Abs a) = do
+    val <- eval vars a
+    case val of
+      IntVal i -> return (IntVal (abs i))
+      StrVal s -> return (IntVal (0))
 
 eval vars (ToString e) = do
     value <- eval vars e
