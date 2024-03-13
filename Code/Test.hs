@@ -3,7 +3,6 @@ module Test where
 
 import Test.QuickCheck
 
-
 import Expr
 
 -- A Value thats always generated to be an IntVal
@@ -23,6 +22,20 @@ instance Arbitrary Value where
         fmap (StrVal) arbitrary,
         fmap (IntVal) arbitrary
         ]
+
+newtype ValidName = ValidName Name
+    deriving (Show)
+
+instance Arbitrary ValidName where
+    arbitrary = do firstLetter <- elements lowerLetters
+                   remaining <- listOf validRemaining
+                   return $ ValidName (firstLetter:remaining)
+        where
+            lowerLetters = ['a'..'z']
+            validRemaining = frequency [
+                (5, elements lowerLetters)
+                , (5, elements ['A'..'Z'])
+                , (1, elements ['0'..'9'])]
 
 -- Constructor for an expression that takes two arguments such as Add / Sub
 type TwoArgOperation = Expr -> Expr -> Expr
@@ -52,8 +65,23 @@ prop_testEvalSub = testEval2IntArithmetic Sub (\x y -> x - y)
 prop_testEvalMul :: Int -> Int -> Bool
 prop_testEvalMul = testEval2IntArithmetic Mul (*)
 
-prop_testEvalDiv :: Int -> Int -> Bool
-prop_testEvalDiv = testEval2IntArithmetic Mul (\x y -> x `div` y)
+-- TODO: Make tests for divisor == 0
+prop_testEvalDiv :: Int -> Int -> Property
+prop_testEvalDiv a b = b /= 0 ==> testEval2IntArithmetic Div div a b
+
+-- TOOD: Test divisor == 0
+prop_testEvalMod :: Int -> Int -> Property
+prop_testEvalMod a b = b /= 0 ==> testEval2IntArithmetic Mod mod a b
+
+-- TODO: Test power < 0
+prop_testEvalPow :: Int -> Positive Int -> Bool
+prop_testEvalPow a (Positive b) = testEval2IntArithmetic Pow (^) a b
+
+prop_getDefinedVar :: ValidName -> Value -> Bool
+prop_getDefinedVar (ValidName name) value = eval [(name, value)] (Var name) == Just value
+
+prop_getUndefinedVar :: ValidName -> Bool
+prop_getUndefinedVar (ValidName name) = eval [] (Var name) == Nothing
 
 return []
 runTests = $quickCheckAll
