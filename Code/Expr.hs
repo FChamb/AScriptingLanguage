@@ -7,6 +7,7 @@ import Parsing
 type Name = String
 
 data Value = IntVal Int | StrVal String
+    deriving (Eq)
 
 instance Show Value where
     show (IntVal i) = show i
@@ -27,7 +28,7 @@ data Expr = Add Expr Expr
           | Concat Expr Expr
           | Val Value
           | Var Name
-  deriving Show
+  deriving (Show, Eq)
 
 -- These are the REPL commands
 data Command = Set Name Expr -- assign an expression to a variable name
