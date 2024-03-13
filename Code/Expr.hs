@@ -19,6 +19,7 @@ data Expr = Add Expr Expr
           | Mul Expr Expr
           | Div Expr Expr
           | Abs Expr
+          | Mod Expr Expr
           | ToString Expr
           | ToInt Expr
           | Concat Expr Expr
@@ -65,6 +66,11 @@ eval vars (Concat a b) = do
 eval vars (Abs a) = do
     val <- eval vars a >>= intVal
     return (IntVal (abs val))
+
+eval vars (Mod x y) = do
+    dividend <- eval vars x >>= intVal
+    divisor <- eval vars y >>= intVal
+    return (IntVal (dividend `mod` divisor))
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -146,7 +152,10 @@ pTerm = do f <- pFactor
             ||| do symbol "/"
                    t <- pTerm
                    return (Div f t)
-                 ||| return f
+                 ||| do symbol "mod"
+                        t <- pFactor
+                        return (Mod f t)
+                      ||| return f
 
 quotedString :: Parser String
 quotedString = do
