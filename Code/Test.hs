@@ -3,6 +3,8 @@ module Test where
 
 import Test.QuickCheck
 
+import Data.List
+
 import Expr
 
 -- A Value thats always generated to be an IntVal
@@ -77,11 +79,22 @@ prop_testEvalMod a b = b /= 0 ==> testEval2IntArithmetic Mod mod a b
 prop_testEvalPow :: Int -> Positive Int -> Bool
 prop_testEvalPow a (Positive b) = testEval2IntArithmetic Pow (^) a b
 
+-- Variables
 prop_getDefinedVar :: ValidName -> Value -> Bool
 prop_getDefinedVar (ValidName name) value = eval [(name, value)] (Var name) == Just value
 
+prop_getDefinedVarFromMultiple :: [(ValidName, Value)] -> Property
+prop_getDefinedVarFromMultiple inputVars = do
+        not (null uniqueVars) ==> do
+            (name, value) <- elements uniqueVars
+            return $ eval uniqueVars (Var name) == Just value
+    where
+        vars = map (\(ValidName n, v) -> (n,v)) inputVars
+        uniqueVars = nubBy (\(n1, v1) (n2, v2) -> n1 == n2) vars
+
 prop_getUndefinedVar :: ValidName -> Bool
 prop_getUndefinedVar (ValidName name) = eval [] (Var name) == Nothing
+
 
 return []
 runTests = $quickCheckAll
