@@ -63,10 +63,8 @@ eval vars (Concat a b) = do
     return (StrVal (aStr ++ bStr))
 
 eval vars (Abs a) = do
-    val <- eval vars a
-    case val of
-      IntVal i -> return (IntVal (abs i))
-      StrVal s -> return (IntVal (0))
+    val <- eval vars a >>= intVal
+    return (IntVal (abs val))
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -128,10 +126,15 @@ pFactor = do i <- integer
                               e <- pExpr
                               string ")"
                               return (ToInt e)
-                            ||| do symbol "("
-                                   e <- pExpr
-                                   symbol ")"
-                                   return e
+                           ||| do symbol "abs"
+                                  string "("
+                                  e <- pExpr
+                                  string ")"
+                                  return (Abs e)
+                               ||| do symbol "("
+                                      e <- pExpr
+                                      symbol ")"
+                                      return e
                                    ||| do v <- identifier
                                           return (Var v)
 
