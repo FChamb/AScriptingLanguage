@@ -53,7 +53,7 @@ executable H2
   main-is:             Main.hs
 
   -- Modules included in this executable, other than Main.
-  other-modules: Parsing Expr REPL Test
+  other-modules: Parsing Expr REPL
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -69,3 +69,8 @@ executable H2
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
+test-suite quickcheck-test
+    type: exitcode-stdio-1.0
+    main-is: TestMain.hs
+    other-modules: Test Expr Parsing
+    build-depends: base, QuickCheck
