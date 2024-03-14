@@ -4,6 +4,8 @@ module Test where
 import Test.QuickCheck
 
 import Data.List
+import Data.Maybe
+import Text.Read
 
 import Expr
 
@@ -38,6 +40,12 @@ instance Arbitrary ValidName where
                 (5, elements lowerLetters)
                 , (5, elements ['A'..'Z'])
                 , (1, elements ['0'..'9'])]
+
+
+-- Test direct values
+prop_testEvalVal :: Value -> Bool
+prop_testEvalVal value = eval [] expr == Just value
+    where expr = Val (value)
 
 -- Constructor for an expression that takes two arguments such as Add / Sub
 type TwoArgOperation = Expr -> Expr -> Expr
@@ -79,6 +87,12 @@ prop_testEvalMod a b = b /= 0 ==> testEval2IntArithmetic Mod mod a b
 prop_testEvalPow :: Int -> Positive Int -> Bool
 prop_testEvalPow a (Positive b) = testEval2IntArithmetic Pow (^) a b
 
+prop_testEvalAbs :: Positive Int -> Bool
+prop_testEvalAbs (Positive i) = eval [] expr == Just expected
+    where
+        expr = (Abs . Val . IntVal) (-i)
+        expected = IntVal i
+
 -- Variables
 prop_getDefinedVar :: ValidName -> Value -> Bool
 prop_getDefinedVar (ValidName name) value = eval [(name, value)] (Var name) == Just value
@@ -95,6 +109,38 @@ prop_getDefinedVarFromMultiple inputVars = do
 prop_getUndefinedVar :: ValidName -> Bool
 prop_getUndefinedVar (ValidName name) = eval [] (Var name) == Nothing
 
+-- Type conversion
+
+prop_evalToString :: Value -> Bool
+prop_evalToString (IntVal i) = eval [] expr == Just expected
+    where
+        expr = ToString (Val (IntVal i))
+        expected = StrVal (show i)
+prop_evalToString (StrVal s) = eval [] expr == Just expected
+    where
+        expr = ToString (Val (StrVal s))
+        expected = StrVal s
+
+{- ToInt checks -}
+-- Test all kinds of values
+prop_evalValueToInt :: Value -> Property
+prop_evalValueToInt (IntVal i) = eval [] expr === Just expected
+    where
+        expr = ToInt (Val (IntVal i))
+        expected = IntVal i
+-- Test random strings (usually not valid)
+prop_evalValueToInt (StrVal s) = isNothing validInt ==> eval [] expr == Nothing
+    where
+        validInt :: Maybe Int
+        validInt = readMaybe s
+        expr = ToInt (Val (StrVal s))
+
+-- Test strings that are definitely integers
+prop_evalIntStringToInt :: Int -> Bool
+prop_evalIntStringToInt i = eval [] expr == Just expected
+    where
+        expr = (ToInt . Val . StrVal . show) i
+        expected = IntVal i
 
 return []
 runTests = $quickCheckAll
