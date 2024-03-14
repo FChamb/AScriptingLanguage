@@ -171,6 +171,13 @@ pFactor = do i <- integer
                                   e <- pExpr
                                   string ")"
                                   return (Abs e)
+                               ||| do symbol "pow"
+                                      symbol "("
+                                      t <- pExpr
+                                      symbol ","
+                                      u <- pExpr
+                                      symbol ")"
+                                      return (Pow t u)
                                 {- ||| do symbol "sqrt"
                                        string "("
                                        e <- pExpr
@@ -194,10 +201,7 @@ pTerm = do f <- pFactor
                  ||| do symbol "mod"
                         t <- pFactor
                         return (Mod f t)
-                     ||| do symbol "^"
-                            t <- pFactor
-                            return (Pow f t)
-                         ||| return f
+                      ||| return f
 
 quotedString :: Parser String
 quotedString = do
