@@ -104,6 +104,28 @@ strVal :: Value -> Maybe String
 strVal (StrVal s) = Just s
 strVal _ = Nothing
 
+{-
+ - Context Free Grammar:
+ -
+ - COMMAND -> VAR = EXPR | VAR = input | print EXPR
+ -
+ - EXPR -> TERM
+ -        | EXPR + EXPR
+ -        | EXPR - EXPR
+ -        | EXPR ++ EXPR
+ -
+ -
+ - TERM -> VAR | VAL | toString(EXPR) | toInt(EXPR) | abs(EXPR) | pow(EXPR,EXPR) | (EXPR)
+ -
+ - # MUL, DIV, Modulo
+ - FACTOR -> TERM
+ -     | TERM * TERM
+ -     | TERM / TERM
+ -     | TERM mod TERM
+ -
+ - VAL = STRING | INT | FLOAT
+ -}
+
 pCommand :: Parser Command
 pCommand = do t <- identifier
               symbol "="
