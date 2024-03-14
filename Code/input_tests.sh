@@ -5,7 +5,8 @@ PID="$$"
 TEMP_OUT_FILE=".test_out"
 
 function write {
-    sleep 0.2; echo "$1" | tee -a "$TEMP_OUT_FILE"
+    # Wait enough time for the program to write to the file
+    sleep 0.1; echo "$1" | tee -a "$TEMP_OUT_FILE"
 }
 
 
@@ -16,6 +17,7 @@ function runTest {
     echo "TEST: $1"
     >"$TEMP_OUT_FILE"
     $inputFunc | cabal run H2 -v0 >> "$TEMP_OUT_FILE"
+    sleep 0.2
     output=$(cat "$TEMP_OUT_FILE")
     if [ "$output" = "$expectedOut" ]; then
         echo "==== TEST $1: PASS ==="
