@@ -9,18 +9,6 @@ import Text.Read
 
 import Expr
 
--- A Value thats always generated to be an IntVal
-newtype RIntVal = RIntVal Value
--- A value thats always generated to be an RIntVal
-newtype RStrVal = RStrVal Value
-
-instance Arbitrary RIntVal where
-    arbitrary = fmap (RIntVal . IntVal) arbitrary
-
-instance Arbitrary RStrVal where
-    arbitrary = fmap (RStrVal . StrVal) arbitrary
-
-
 instance Arbitrary Value where
     arbitrary = oneof [
         fmap (StrVal) arbitrary,
