@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Automated user input testing
+# TODO: Probably much easier to provide a flag to echo input / Use file input
+
 cabal build H2 -v0 || (echo "Build failure" && exit 1)
 
 PID="$$"
@@ -6,7 +10,7 @@ TEMP_OUT_FILE=".test_out"
 
 function write {
     # Wait enough time for the program to write to the file
-    sleep 0.1; echo "$1" | tee -a "$TEMP_OUT_FILE"
+    sleep 0.2; echo "$1" | tee -a "$TEMP_OUT_FILE"
 }
 
 
@@ -17,7 +21,7 @@ function runTest {
     echo "TEST: $1"
     >"$TEMP_OUT_FILE"
     $inputFunc | cabal run H2 -v0 >> "$TEMP_OUT_FILE"
-    sleep 0.2
+    sleep 0.3
     output=$(cat "$TEMP_OUT_FILE")
     if [ "$output" = "$expectedOut" ]; then
         echo "==== TEST $1: PASS ==="
@@ -51,7 +55,7 @@ expectedBasicInput="""[]
 hello world
 [(\"test\",hello world)]
 > print test
-Parse error
+hello world
 [(\"test\",hello world)]
 > EOF, goodbye"""
 
@@ -61,13 +65,35 @@ function basicInput {
     write "print test"
 }
 
+expectedAddMul="""[]
+> print 2+4*6
+26
+[]
+> EOF, goodbye"""
+
+function addMul {
+    write "print 2+4*6"
+}
+
+expectedAddMulBracketed="""[]
+> print (2+4)*6
+36
+[]
+> EOF, goodbye"""
+
+function addMulBracketed {
+    write "print (2+4)*6"
+}
+
 echo "Preparing to run"
 #| grep -v -e "^\\[.*\\]$")
 failed=0
 runTest "basicPrintVar" basicPrintVar "$expectedBasicPrintVar" || ((failed++))
 runTest "basicInput" basicInput "$expectedBasicInput" || ((failed++))
+runTest "addMul" addMul "$expectedAddMul" || ((failed++))
+runTest "addMulBracketed" addMulBracketed "$expectedAddMulBracketed" || ((failed++))
 
-if [ -z failed ]; then
+if [ "$failed" -eq "0" ]; then
     echo "All tests passed"
 else
     echo "$failed tests failed"

@@ -109,10 +109,10 @@ strVal _ = Nothing
  -
  - COMMAND -> VAR = EXPR | VAR = input | print EXPR
  -
- - EXPR -> TERM
- -        | EXPR + EXPR
- -        | EXPR - EXPR
- -        | EXPR ++ EXPR
+ - EXPR -> FACTOR
+ -        | TERM + EXPR
+ -        | TERM - EXPR
+ -        | TERM ++ EXPR
  -
  -
  - TERM -> VAR | VAL | toString(EXPR) | toInt(EXPR) | abs(EXPR) | pow(EXPR,EXPR) | (EXPR)
@@ -138,8 +138,9 @@ pCommand = do t <- identifier
                    e <- pExpr
                    return (Print e)
 
+-- Lowest priority operations go here
 pExpr :: Parser Expr
-pExpr = do t <- pTerm
+pExpr = do t <- pFactor
            do symbol "+"
               e <- pExpr
               return (Add t e)
@@ -151,12 +152,30 @@ pExpr = do t <- pTerm
                         return (Concat t e)
                     ||| return t
 
+-- Higher priority operations go here (e.g. multiply, divide)
 pFactor :: Parser Expr
-pFactor = do i <- integer
-             return (Val (IntVal (i)))
-           ||| do s <- quotedString
-                  return (Val (StrVal s))
-                  ||| do symbol "toString"
+pFactor = do f <- pTerm
+             do symbol "*"
+                t <- pTerm
+                return (Mul f t)
+                ||| do symbol "/"
+                       t <- pTerm
+                       return (Div f t)
+                       ||| do symbol "mod"
+                              t <- pFactor
+                              return (Mod f t)
+                              ||| return f
+
+-- Must be value, variable or something with brackets
+pTerm :: Parser Expr
+pTerm = do v <- pValue
+           return (Val v)
+           ||| do symbol "toString"
+                  string "("
+                  e <- pExpr
+                  string ")"
+                  return (ToString e)
+                  ||| do symbol "toInt"
                          string "("
                          e <- pExpr
                          string ")"
@@ -178,30 +197,26 @@ pFactor = do i <- integer
                                       u <- pExpr
                                       symbol ")"
                                       return (Pow t u)
-                                {- ||| do symbol "sqrt"
+                             {- ||| do symbol "sqrt"
                                        string "("
                                        e <- pExpr
                                        string ")"
                                        return (Sqrt e) -}
-                                    ||| do symbol "("
-                                           e <- pExpr
-                                           symbol ")"
-                                           return e
-                                        ||| do v <- identifier
-                                               return (Var v)
+                                ||| do symbol "("
+                                       e <- pExpr
+                                       symbol ")"
+                                       return e
+                                       -- Needs to be last so it doesn't try to consume functions
+                                       ||| do v <- identifier
+                                              return (Var v)
 
-pTerm :: Parser Expr
-pTerm = do f <- pFactor
-           do symbol "*"
-              t <- pTerm
-              return (Mul f t)
-            ||| do symbol "/"
-                   t <- pTerm
-                   return (Div f t)
-                 ||| do symbol "mod"
-                        t <- pFactor
-                        return (Mod f t)
-                      ||| return f
+-- TODO: Add float parsing here
+-- Parsing of values
+pValue :: Parser Value
+pValue = do i <- integer
+            return (IntVal i)
+            ||| do s <- quotedString
+                   return (StrVal s)
 
 quotedString :: Parser String
 quotedString = do
