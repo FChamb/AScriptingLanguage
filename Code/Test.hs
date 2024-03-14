@@ -142,5 +142,32 @@ prop_evalIntStringToInt i = eval [] expr == Just expected
         expr = (ToInt . Val . StrVal . show) i
         expected = IntVal i
 
+-- Test concatenation of two strings
+prop_evalConcat :: String -> String -> Bool
+prop_evalConcat s1 s2 = eval [] expr == Just expected
+    where
+        expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
+        expected = StrVal (s1 ++ s2)
+
+-- More advanced expression tree tests
+
+-- Try addition using variables
+prop_evalAddWithVars :: (ValidName, Int) -> (ValidName, Int) -> Bool
+prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars expr == Just (IntVal expected)
+    where
+        vars = [(na, IntVal a), (nb, IntVal b)]
+        expr = Add (Var na) (Var nb)
+        expected = a + b
+
+-- Try multiplication and addition in expression tree
+prop_evalAddAndMul :: Int -> Int -> Int -> Bool
+prop_evalAddAndMul a b c = eval [] expr == Just (IntVal expected)
+    where
+        subExpr :: Expr
+        subExpr = Mul (Val (IntVal b)) (Val (IntVal c))
+        expr :: Expr
+        expr = Add (Val (IntVal a)) subExpr
+        expected = a + (b*c)
+
 return []
 runTests = $quickCheckAll
