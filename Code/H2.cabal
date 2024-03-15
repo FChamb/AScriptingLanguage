@@ -61,7 +61,8 @@ executable H2
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.14 && < 5,
                        haskeline >= 0.8.2 && < 0.8.3,
-                       QuickCheck >= 2.10 && < 3
+                       QuickCheck >= 2.10 && < 3,
+                       directory >= 0.1
 
   -- Directories containing source files.
   -- hs-source-dirs:

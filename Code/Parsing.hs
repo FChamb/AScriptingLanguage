@@ -140,6 +140,12 @@ float                         =  do char '-'
 space                         :: Parser ()
 space                         =  do many (sat isSpace)
                                     return ()
+
+fileName                      :: Parser String
+fileName                      =  do space
+                                    f <- many item
+                                    return f
+
 {-
 Ignoring spacing
 ----------------

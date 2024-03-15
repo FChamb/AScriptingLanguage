@@ -1,6 +1,8 @@
 module REPL where
 
 import System.Console.Haskeline
+import Control.Monad.IO.Class
+import System.Directory
 
 import Expr
 import Parsing
@@ -53,6 +55,16 @@ process st (Print e) = do
         Nothing -> return ()
     -- Print the result of evaluation
     repl st
+
+process st (File f) = do
+    x <- liftIO(doesFileExist f)
+    if x then do outputStrLn "Loading File..."
+                 liftIO(loadFile f st)
+    else do outputStrLn ("\"" ++ f ++ "\"" ++ "does not exist!")
+            repl st
+
+loadFile :: Name -> LState -> IO ()
+loadFile file st = runInputTBehavior (useFile file) defaultSettings (repl st)
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls

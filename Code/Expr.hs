@@ -36,6 +36,7 @@ data Expr = Add Expr Expr
 data Command = Set Name Expr -- assign an expression to a variable name
              | Print Expr    -- evaluate an expression and print the result
              | InputSet Name -- Prompt for input and store into variable
+             | File Name     -- Prompt for loading a file to run
   deriving Show
 
 eval :: [(Name, Value)] -> -- Variable name to value mapping
@@ -183,10 +184,15 @@ pCommand = do t <- identifier
                  return (InputSet t)
                ||| do e <- pExpr
                       return (Set t e)
-            ||| do string "print"
-                   space
-                   e <- pExpr
-                   return (Print e)
+           ||| do string "print"
+                  space
+                  e <- pExpr
+                  return (Print e)
+           ||| do
+                 string ":f"
+                 f <- fileName
+                 return (File f)
+
 
 -- Lowest priority operations go here
 pExpr :: Parser Expr
