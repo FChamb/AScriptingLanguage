@@ -6,11 +6,12 @@ import Parsing
 
 type Name = String
 
-data Value = IntVal Int | StrVal String
+data Value = IntVal Int | FloatVal Float | StrVal String
     deriving (Eq)
 
 instance Show Value where
     show (IntVal i) = show i
+    show (FloatVal f) = show f
     show (StrVal s) = s
 
 -- At first, 'Expr' contains only addition, conversion to strings, and integer
@@ -25,6 +26,7 @@ data Expr = Add Expr Expr
           | Sqrt Expr
           | ToString Expr
           | ToInt Expr
+          | ToFloat Expr
           | Concat Expr Expr
           | Val Value
           | Var Name
