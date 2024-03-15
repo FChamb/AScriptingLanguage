@@ -44,24 +44,46 @@ eval :: [(Name, Value)] -> -- Variable name to value mapping
 eval vars (Val x) = Just x -- for values, just give the value directly
 eval vars (Var name) = lookup name vars -- for values, just give the value directly
 eval vars (Add x y) = do
-    xInt <- eval vars x >>= intVal
-    yInt <- eval vars y >>= intVal
-    return (IntVal (xInt + yInt))
+    xVal <- eval vars x
+    yVal <- eval vars y
+    case (xVal, yVal) of
+        (IntVal intA, IntVal intB) -> return $ IntVal (intA + intB)
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA + fltB)
+        (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int + flt)
+        (FloatVal flt, IntVal int) -> return $ FloatVal (flt + fromIntegral int)
+        _ -> Nothing
 
 eval vars (Sub x y) = do
-    xInt <- eval vars x >>= intVal
-    yInt <- eval vars y >>= intVal
-    return (IntVal (xInt - yInt))
+    xVal <- eval vars x
+    yVal <- eval vars y
+    case (xVal, yVal) of
+        (IntVal intA, IntVal intB) -> return $ IntVal (intA - intB)
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA - fltB)
+        (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int - flt)
+        (FloatVal flt, IntVal int) -> return $ FloatVal (flt - fromIntegral int)
+        _ -> Nothing
 
 eval vars (Mul x y) = do
-    xInt <- eval vars x >>= intVal
-    yInt <- eval vars y >>= intVal
-    return (IntVal (xInt * yInt))
+    xVal <- eval vars x
+    yVal <- eval vars y
+    case (xVal, yVal) of
+        (IntVal intA, IntVal intB) -> return $ IntVal (intA * intB)
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA * fltB)
+        (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int * flt)
+        (FloatVal flt, IntVal int) -> return $ FloatVal (flt * fromIntegral int)
+        _ -> Nothing
 
 eval vars (Div x y) = do
-    xInt <- eval vars x >>= intVal
-    yInt <- eval vars y >>= intVal
-    return (IntVal (xInt `div` yInt))
+    xVal <- eval vars x
+    yVal <- eval vars y
+    case (xVal, yVal) of
+        (_, IntVal 0) -> Nothing
+        (_, FloatVal 0.0) -> Nothing
+        (IntVal intA, IntVal intB) -> return $ FloatVal (fromIntegral intA / fromIntegral intB)
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA / fltB)
+        (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int / flt)
+        (FloatVal flt, IntVal int) -> return $ FloatVal (flt / fromIntegral int)
+        _ -> Nothing
 
 eval vars (Concat a b) = do
     aStr <- eval vars a >>= strVal
@@ -69,22 +91,40 @@ eval vars (Concat a b) = do
     return (StrVal (aStr ++ bStr))
 
 eval vars (Abs a) = do
-    val <- eval vars a >>= intVal
-    return (IntVal (abs val))
+    val <- eval vars a
+    case val of
+        IntVal int -> return $ IntVal (abs int)
+        FloatVal flt -> return $ FloatVal (abs flt)
+        _ -> Nothing
 
 eval vars (Mod x y) = do
-    dividend <- eval vars x >>= intVal
-    divisor <- eval vars y >>= intVal
-    return (IntVal (dividend `mod` divisor))
+    dividend <- eval vars x
+    divisor <- eval vars y
+    case (dividend, divisor) of
+        (_, IntVal 0) -> Nothing
+        (_, FloatVal 0.0) -> Nothing
+        (IntVal intA, IntVal intB) -> return $ IntVal (intA `mod` intB)
+        -- (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA `mod` fltB)
+        -- (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int `mod` flt)
+        -- (FloatVal flt, IntVal int) -> return $ FloatVal (flt `mod` fromIntegral int)
+        _ -> Nothing
 
 eval vars (Pow x y) = do
-    base <- eval vars x >>= intVal
-    exp <- eval vars y >>= intVal
-    return (IntVal (base^exp)) -- Will need to change to ** after floating point nums are implemented
+    base <- eval vars x
+    exp <- eval vars y
+    case (base, exp) of
+        (IntVal intA, IntVal intB) -> return $ IntVal (intA ^ intB)
+        -- (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA ^ fltB)
+        -- (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int ^ flt)
+        -- (FloatVal flt, IntVal int) -> return $ FloatVal (flt ^ fromIntegral int)
+        _ -> Nothing
 
-{- eval vars (Sqrt a) = do 
-    val <- eval vars a >>= intVal
-    return (IntVal (val)) -}
+eval vars (Sqrt a) = do
+    val <- eval vars a
+    case val of
+        IntVal int -> return $ FloatVal (sqrt $ fromIntegral int)
+        FloatVal flt -> return $ FloatVal (sqrt flt)
+        _ -> Nothing
 
 eval vars (ToString e) = do
     value <- eval vars e
@@ -97,6 +137,14 @@ eval vars (ToInt e) = do
     case value of
         StrVal s -> readMaybe s >>= Just . IntVal
         IntVal i -> return (IntVal i)
+        FloatVal f -> return $ IntVal (truncate f)
+        _ -> Nothing
+
+eval vars (ToFloat e) = do
+    value <- eval vars e
+    case value of
+        StrVal s -> readMaybe s >>= Just . FloatVal
+        FloatVal f -> return (FloatVal f)
 
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i
@@ -215,10 +263,12 @@ pTerm = do v <- pValue
 -- TODO: Add float parsing here
 -- Parsing of values
 pValue :: Parser Value
-pValue = do i <- integer
-            return (IntVal i)
-            ||| do s <- quotedString
-                   return (StrVal s)
+pValue = do f <- float
+            return (FloatVal f)
+            ||| do i <- integer
+                   return (IntVal i)
+                   ||| do s <- quotedString
+                          return (StrVal s)
 
 quotedString :: Parser String
 quotedString = do

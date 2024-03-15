@@ -126,6 +126,17 @@ int                           =  do char '-'
                                     return (-n)
                                   ||| nat
 
+float                         :: Parser Float
+float                         =  do char '-'
+                                    xs <- many1 digit
+                                    char '.'
+                                    ys <- many1 digit
+                                    return (read (('-':xs)++('.':ys))) :: Parser Float
+                                    ||| do xs <- many1 digit
+                                           char '.'
+                                           ys <- many1 digit
+                                           return(read (xs++('.':ys))) :: Parser Float
+
 space                         :: Parser ()
 space                         =  do many (sat isSpace)
                                     return ()
