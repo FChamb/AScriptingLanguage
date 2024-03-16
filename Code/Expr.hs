@@ -81,7 +81,9 @@ eval vars (Div x y) = do
     case (xVal, yVal) of
         (_, IntVal 0) -> Nothing
         (_, FloatVal 0.0) -> Nothing
-        (IntVal intA, IntVal intB) -> return $ FloatVal (fromIntegral intA / fromIntegral intB)
+        (IntVal intA, IntVal intB) -> return $ if (intA `mod` intB == 0)
+                                                  then IntVal (intA `div` intB)
+                                                  else FloatVal (fromIntegral intA / fromIntegral intB)
         (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA / fltB)
         (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int / flt)
         (FloatVal flt, IntVal int) -> return $ FloatVal (flt / fromIntegral int)
