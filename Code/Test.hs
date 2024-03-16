@@ -107,15 +107,19 @@ prop_testEvalModFloat0 (NumberValue v) = eval [] expr == Nothing
 
 -- POW
 prop_testEvalPowIntNon0 :: Int -> Int -> Property
-prop_testEvalPowIntNon0 a b = a /= 0 ==> testEval2IntArithmetic Pow (^) a b
+prop_testEvalPowIntNon0 a x = a /= 0 ==> testEval2IntArithmetic Pow (^) a x
 
-prop_testEvalPowFloatNon0 :: Float -> Float -> Property
-prop_testEvalPowFloatNon0 a b = a /= 0 ==> eval [] expr === Just expected
+-- Skip sqrt-like as complex for negative a
+prop_testEvalPowFloatReg :: Positive Float -> Float -> Property
+prop_testEvalPowFloatReg (Positive a) x = a /= 0 ==> eval [] expr === Just expected
     where
-        expr = Pow (Val (FloatVal a)) (Val (FloatVal b))
-        expected = FloatVal (a**b)
+        expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
+        expected = FloatVal (a**x)
 
-
+prop_testEvalPowFloatFractional :: Negative Float -> Float -> Property
+prop_testEvalPowFloatFractional (Negative a) x = isNaN (a**x) ==> eval [] expr === Nothing
+    where
+        expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
 
 -- 0^x positive
 prop_testEvalPow0IntPos :: Positive Int -> Property
