@@ -45,11 +45,11 @@ prop_evalValueToInt (StrVal s) = isNothing validInt ==> eval [] expr == Nothing
         expr = ToInt (Val (StrVal s))
 
 -- Test strings that are definitely integers
-prop_evalFloatStringToFloat :: Float -> Bool
-prop_evalFloatStringToFloat f = eval [] expr == Just expected
+prop_evalIntStringToInt :: Int -> Bool
+prop_evalIntStringToInt i = eval [] expr == Just expected
     where
-        expr = (ToFloat . Val . StrVal . show) f
-        expected = FloatVal f
+        expr = (ToInt . Val . StrVal . show) i
+        expected = IntVal i
 
 {-- ToFloat checks --}
 -- Test all kinds of values
@@ -70,11 +70,11 @@ prop_evalValueToFloat (StrVal s) = isNothing validFloat ==> eval [] expr == Noth
         expr = ToFloat (Val (StrVal s))
 
 -- Test strings that are definitely floats
-prop_evalIntStringToInt :: Int -> Bool
-prop_evalIntStringToInt i = eval [] expr == Just expected
+prop_evalFloatStringToFloat :: Float -> Bool
+prop_evalFloatStringToFloat f = eval [] expr == Just expected
     where
-        expr = (ToInt . Val . StrVal . show) i
-        expected = IntVal i
+        expr = (ToFloat . Val . StrVal . show) f
+        expected = FloatVal f
 
 return []
 runConversionTests = $quickCheckAll

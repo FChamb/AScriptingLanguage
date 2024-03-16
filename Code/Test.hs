@@ -4,7 +4,6 @@ module Test where
 import Test.QuickCheck
 
 import Data.List
-import Data.Maybe
 
 import Expr
 
