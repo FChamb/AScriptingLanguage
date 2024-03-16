@@ -38,6 +38,9 @@ data Command = Set Name Expr -- assign an expression to a variable name
              | Print Expr    -- evaluate an expression and print the result
              | InputSet Name -- Prompt for input and store into variable
              | File Name     -- Prompt for loading a file to run
+             | Repeat Int    -- Prompt for repeating a command
+             | Quit          -- Prompt for quiting program
+             | Help          -- Prompt for showing helpful options
   deriving Show
 
 eval :: [(Name, Value)] -> -- Variable name to value mapping
@@ -189,10 +192,13 @@ pCommand = do t <- identifier
                   space
                   e <- pExpr
                   return (Print e)
-           ||| do
-                 string ":f"
-                 f <- fileName
-                 return (File f)
+           ||| do string "quit"
+                  return Quit
+           ||| do string ":f"
+                  f <- fileName
+                  return (File f)
+           ||| do string ":h"
+                  return Help
 
 
 -- Lowest priority operations go here
@@ -218,7 +224,7 @@ pFactor = do f <- pTerm
                 ||| do symbol "/"
                        t <- pTerm
                        return (Div f t)
-                       ||| do symbol "mod"
+                       ||| do symbol "%"
                               t <- pFactor
                               return (Mod f t)
                               ||| return f
@@ -267,7 +273,6 @@ pTerm = do v <- pValue
                                         ||| do v <- identifier
                                                return (Var v)
 
--- TODO: Add float parsing here
 -- Parsing of values
 pValue :: Parser Value
 pValue = do f <- float
