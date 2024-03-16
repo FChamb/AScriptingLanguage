@@ -1,5 +1,6 @@
 module Expr where
 
+import Data.Fixed -- For divMod'
 import Text.Read
 
 import Parsing
@@ -105,9 +106,9 @@ eval vars (Mod x y) = do
         (_, IntVal 0) -> Nothing
         (_, FloatVal 0.0) -> Nothing
         (IntVal intA, IntVal intB) -> return $ IntVal (intA `mod` intB)
-        -- (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA `mod` fltB)
-        -- (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int `mod` flt)
-        -- (FloatVal flt, IntVal int) -> return $ FloatVal (flt `mod` fromIntegral int)
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (snd (divMod' fltA fltB))
+        (IntVal int, FloatVal flt) -> return $ FloatVal (snd (divMod' (fromIntegral int) flt))
+        (FloatVal flt, IntVal int) -> return $ FloatVal (snd (divMod' flt (fromIntegral int)))
         _ -> Nothing
 
 eval vars (Pow x y) = do
