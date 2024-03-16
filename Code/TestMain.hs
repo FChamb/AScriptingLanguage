@@ -1,7 +1,11 @@
-import System.Exit (exitFailure)
+import System.Exit (exitFailure, exitSuccess)
 
 import Test
 
 
-main :: IO Bool
-main = runTests
+main :: IO ()
+main = do
+    suc <- runTests
+    case suc of
+        True -> exitSuccess
+        False -> exitFailure

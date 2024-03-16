@@ -140,12 +140,31 @@ prop_testEvalPowFloat0Neg (Negative negFloat) = eval [] expr === Nothing
     where expr = Pow zero_f_expr (Val (FloatVal negFloat))
 
 
--- ABS
-prop_testEvalAbs :: Positive Int -> Bool
-prop_testEvalAbs (Positive i) = eval [] expr == Just expected
+-- ABS (INTEGERS)
+prop_testEvalAbsNegInt :: Negative Int -> Bool
+prop_testEvalAbsNegInt (Negative i) = eval [] expr == Just expected
     where
-        expr = (Abs . Val . IntVal) (-i)
+        expr = (Abs . Val . IntVal) i
+        expected = IntVal (-i)
+
+prop_testEvalAbsPosInt :: Positive Int -> Bool
+prop_testEvalAbsPosInt (Positive i) = eval [] expr == Just expected
+    where
+        expr = (Abs . Val . IntVal) i
         expected = IntVal i
+
+-- ABS (FLOATS)
+prop_testEvalAbsNegFloat :: Negative Float -> Bool
+prop_testEvalAbsNegFloat (Negative f) = eval [] expr == Just expected
+    where
+        expr = (Abs . Val . FloatVal) f
+        expected = FloatVal (-f)
+
+prop_testEvalAbsPosFloat :: Positive Float -> Bool
+prop_testEvalAbsPosFloat (Positive f) = eval [] expr == Just expected
+    where
+        expr = (Abs . Val . FloatVal) f
+        expected = FloatVal f
 
 -- Variables
 prop_getDefinedVar :: ValidName -> Value -> Bool
@@ -198,13 +217,39 @@ prop_evalValueToInt (StrVal s) = isNothing validInt ==> eval [] expr == Nothing
         expr = ToInt (Val (StrVal s))
 
 -- Test strings that are definitely integers
+prop_evalFloatStringToFloat :: Float -> Bool
+prop_evalFloatStringToFloat f = eval [] expr == Just expected
+    where
+        expr = (ToFloat . Val . StrVal . show) f
+        expected = FloatVal f
+
+{-- ToFloat checks --}
+-- Test all kinds of values
+prop_evalValueToFloat :: Value -> Property
+prop_evalValueToFloat (IntVal i) = eval [] expr === Just expected
+    where
+        expr = ToFloat (Val (IntVal i))
+        expected = FloatVal (fromIntegral i)
+prop_evalValueToFloat (FloatVal f) = eval [] expr === Just expected
+    where
+        expr = ToFloat (Val (FloatVal f))
+        expected = FloatVal f
+-- Test random strings (usually not valid)
+prop_evalValueToFloat (StrVal s) = isNothing validFloat ==> eval [] expr == Nothing
+    where
+        validFloat :: Maybe Float
+        validFloat = readMaybe s
+        expr = ToFloat (Val (StrVal s))
+
+-- Test strings that are definitely floats
 prop_evalIntStringToInt :: Int -> Bool
 prop_evalIntStringToInt i = eval [] expr == Just expected
     where
         expr = (ToInt . Val . StrVal . show) i
         expected = IntVal i
 
--- Test concatenation of two strings
+
+{- Test concatenation of two strings -}
 prop_evalConcat :: String -> String -> Bool
 prop_evalConcat s1 s2 = eval [] expr == Just expected
     where
