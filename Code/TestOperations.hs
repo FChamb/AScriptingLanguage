@@ -15,10 +15,6 @@ instance Arbitrary NumberValue where
         fmap (FloatVal) arbitrary
         ])
 
-isVNonNeg :: Value -> Bool
-isVNonNeg v = case v of
-                    FloatVal f -> f >= 0
-                    IntVal i -> i >= 0
 
 
 -- Constructor for an expression that takes two arguments such as Add / Sub
@@ -73,8 +69,17 @@ prop_testEvalSubInts = testEval2IntArithmetic Sub (-)
 prop_testEvalSubFloats :: Float -> Float -> Bool
 prop_testEvalSubFloats = testEval2FloatArithmetic Sub (-)
 
-prop_testEvalSubMixed :: Int -> Float -> Property
-prop_testEvalSubMixed = testEval2MixedComArithmetic Sub (-)
+prop_testEvalSubIntFloat :: Int -> Float -> Property
+prop_testEvalSubIntFloat i f = eval [] expr === Just expected
+    where
+        expr = Sub (Val (IntVal i)) (Val (FloatVal f))
+        expected = FloatVal $ (fromIntegral i) - f
+
+prop_testEvalSubFloatInt :: Float -> Int -> Property
+prop_testEvalSubFloatInt f i = eval [] expr === Just expected
+    where
+        expr = Sub (Val (IntVal i)) (Val (FloatVal f))
+        expected = FloatVal $ f - (fromIntegral i)
 
 {- Multiplication a * b -}
 prop_testEvalMulInts :: Int -> Int -> Bool
@@ -151,6 +156,12 @@ prop_testEvalPowFloat0Neg (Negative negFloat) = eval [] expr === Nothing
 
 {- Abs(x) - Absolute value -}
 -- ABS (INTEGERS)
+
+isVNonNeg :: Value -> Bool
+isVNonNeg v = case v of
+                    FloatVal f -> f >= 0
+                    IntVal i -> i >= 0
+
 prop_testEvalPosNum :: NumberValue -> Property
 prop_testEvalPosNum (NumberValue v) = isVNonNeg v ==> eval [] expr === Just v
     where expr = Abs (Val v)
