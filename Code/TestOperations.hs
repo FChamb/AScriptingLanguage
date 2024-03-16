@@ -178,5 +178,26 @@ prop_testEvalAbsNegFloat (Negative f) = eval [] expr == Just expected
         expr = (Abs . Val . FloatVal) f
         expected = FloatVal (-f)
 
+{- Square Root sqrt() -}
+prop_testSqrtInt :: Positive Int -> Property
+prop_testSqrtInt (Positive x) = eval [] expr === Just expected
+    where
+        expr = Sqrt (Val (IntVal (x*x)))
+        expected = FloatVal (fromIntegral x)
+
+prop_testSqrtNegInt :: Negative Int -> Property
+prop_testSqrtNegInt (Negative x) = eval [] expr === Nothing
+    where expr = Sqrt (Val (IntVal x))
+
+prop_testSqrtFloat :: Positive Float -> Property
+prop_testSqrtFloat (Positive x) = eval [] expr === Just expected
+    where
+        expr = Sqrt (Val (FloatVal (x*x)))
+        expected = FloatVal x
+
+prop_testSqrtNegFloat :: Negative Float -> Property
+prop_testSqrtNegFloat (Negative x) = eval [] expr === Nothing
+    where expr = Sqrt (Val (FloatVal x))
+
 return []
 runOperationTests = $quickCheckAll
