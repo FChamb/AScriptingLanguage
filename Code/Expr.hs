@@ -115,10 +115,9 @@ eval vars (Pow x y) = do
     exp <- eval vars y
     case (base, exp) of
         (IntVal intA, IntVal intB) -> return $ IntVal (intA ^ intB)
-        -- (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA ^ fltB)
-        -- (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int ^ flt)
-        -- (FloatVal flt, IntVal int) -> return $ FloatVal (flt ^ fromIntegral int)
-        _ -> Nothing
+        (FloatVal fltA, FloatVal fltB) -> return $ FloatVal (fltA ** fltB)
+        (IntVal int, FloatVal flt) -> return $ FloatVal (fromIntegral int ** flt)
+        (FloatVal flt, IntVal int) -> return $ FloatVal (flt ** fromIntegral int)
 
 eval vars (Sqrt a) = do
     val <- eval vars a
@@ -139,7 +138,6 @@ eval vars (ToInt e) = do
         StrVal s -> readMaybe s >>= Just . IntVal
         IntVal i -> return (IntVal i)
         FloatVal f -> return $ IntVal (truncate f)
-        _ -> Nothing
 
 eval vars (ToFloat e) = do
     value <- eval vars e
