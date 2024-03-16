@@ -252,18 +252,18 @@ pTerm = do v <- pValue
                                       u <- pExpr
                                       symbol ")"
                                       return (Pow t u)
-                             {- ||| do symbol "sqrt"
-                                       string "("
-                                       e <- pExpr
-                                       string ")"
-                                       return (Sqrt e) -}
-                                ||| do symbol "("
-                                       e <- pExpr
-                                       symbol ")"
-                                       return e
-                                       -- Needs to be last so it doesn't try to consume functions
-                                       ||| do v <- identifier
-                                              return (Var v)
+                                 ||| do symbol "sqrt"
+                                        string "("
+                                        e <- pExpr
+                                        string ")"
+                                        return (Sqrt e)
+                                    ||| do symbol "("
+                                           e <- pExpr
+                                           symbol ")"
+                                           return e
+                                           -- Needs to be last so it doesn't try to consume functions
+                                        ||| do v <- identifier
+                                               return (Var v)
 
 -- TODO: Add float parsing here
 -- Parsing of values
