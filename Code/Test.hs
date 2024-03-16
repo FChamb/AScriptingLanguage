@@ -7,8 +7,6 @@ import Data.List
 
 import Expr
 
-newtype NumberValue = NumberValue Value
-    deriving (Show)
 
 instance Arbitrary Value where
     arbitrary = oneof [
@@ -17,11 +15,6 @@ instance Arbitrary Value where
         fmap (FloatVal) arbitrary
         ]
 
-instance Arbitrary NumberValue where
-    arbitrary = fmap NumberValue (oneof [
-        fmap (IntVal) arbitrary,
-        fmap (FloatVal) arbitrary
-        ])
 
 newtype ValidName = ValidName Name
     deriving (Show)
