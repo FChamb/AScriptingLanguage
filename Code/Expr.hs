@@ -12,7 +12,13 @@ instance Show Value where
     show (StrVal s) = s
 type Vars = [(Name, Value)]
 
--- Arguments, Statements, Return value
+{-
+ - Functions
+ -
+ - Functions work by having a series a statements (terminted by a semi colon)
+ - followed by a final "return" expression, which is evaluated and given
+ - as the result of the function as a whole
+ -}
 data UserFunc = UserFunc [Name] [FuncStatement] Expr
     deriving (Show)
 data FuncStatement = FuncSetVar Name Expr -- TODO: support some kind of if too?
