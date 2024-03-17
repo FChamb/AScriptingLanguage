@@ -1,5 +1,7 @@
 module Parsers where
 
+import Data.List (nub)
+
 import Parsing
 import Expr
 
@@ -55,7 +57,9 @@ pFunc = do symbol "def" -- Define a function
            stmts <- many pFuncStatement
            retExpr <- pExpr
            symbol "}"
-           return $ DefUserFunc fName (UserFunc args stmts retExpr)
+           if nub args == args
+              then return $ DefUserFunc fName (UserFunc args stmts retExpr)
+              else failure -- Argument names must be unique
 
 pFuncStatement :: Parser FuncStatement
 pFuncStatement = do
