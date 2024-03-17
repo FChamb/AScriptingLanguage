@@ -16,7 +16,6 @@ instance Arbitrary NumberValue where
         ])
 
 
-
 -- Constructor for an expression that takes two arguments such as Add / Sub
 type TwoArgOperation = Expr -> Expr -> Expr
 
@@ -32,19 +31,19 @@ type FloatAndIntOperation = Float -> Int -> Float
  - simple operation
 -}
 testEval2IntArithmetic :: TwoArgOperation -> TwoIntOperation -> Int -> Int -> Bool
-testEval2IntArithmetic opExpr fResult x y = eval [] expr == Just expected
+testEval2IntArithmetic opExpr fResult x y = evalBasic expr == Just expected
     where
         expr = opExpr (Val (IntVal x)) (Val (IntVal y))
         expected = IntVal (fResult x y)
 
 testEval2FloatArithmetic :: TwoArgOperation -> TwoFloatOperation -> Float -> Float -> Bool
-testEval2FloatArithmetic opExpr fResult x y = eval [] expr == Just expected
+testEval2FloatArithmetic opExpr fResult x y = evalBasic expr == Just expected
     where
         expr = opExpr (Val (FloatVal x)) (Val (FloatVal y))
         expected = FloatVal (fResult x y)
 
 testEval2MixedComArithmetic :: TwoArgOperation -> (Float -> Float -> Float) -> Int -> Float -> Property
-testEval2MixedComArithmetic opExpr fResult i f = eval [] expr1 === Just expected .&&. eval [] expr2 === Just expected
+testEval2MixedComArithmetic opExpr fResult i f = evalBasic expr1 === Just expected .&&. evalBasic expr2 === Just expected
     where
         a = Val (IntVal i)
         b = Val (FloatVal f)
@@ -70,13 +69,13 @@ prop_testEvalSubFloats :: Float -> Float -> Bool
 prop_testEvalSubFloats = testEval2FloatArithmetic Sub (-)
 
 prop_testEvalSubIntFloat :: Int -> Float -> Property
-prop_testEvalSubIntFloat i f = eval [] expr === Just expected
+prop_testEvalSubIntFloat i f = evalBasic expr === Just expected
     where
         expr = Sub (Val (IntVal i)) (Val (FloatVal f))
         expected = FloatVal $ (fromIntegral i) - f
 
 prop_testEvalSubFloatInt :: Float -> Int -> Property
-prop_testEvalSubFloatInt f i = eval [] expr === Just expected
+prop_testEvalSubFloatInt f i = evalBasic expr === Just expected
     where
         expr = Sub (Val (IntVal i)) (Val (FloatVal f))
         expected = FloatVal $ f - (fromIntegral i)
@@ -106,7 +105,7 @@ prop_testIntDiv a b = a /= 0 ==> testEval2IntArithmetic Div (\_ _ -> b) ab a
     where ab = a * b
 
 prop_testEvalDiv0 :: NumberValue -> Bool
-prop_testEvalDiv0 (NumberValue v) = eval [] expr == Nothing
+prop_testEvalDiv0 (NumberValue v) = evalBasic expr == Nothing
     where expr = Div (Val v) zero_i_expr
 
 
@@ -115,7 +114,7 @@ prop_testEvalMod :: Int -> Int -> Property
 prop_testEvalMod a b = b /= 0 ==> testEval2IntArithmetic Mod mod a b
 
 prop_testEvalMod0 :: NumberValue -> Bool
-prop_testEvalMod0 (NumberValue v) = eval [] expr == Nothing
+prop_testEvalMod0 (NumberValue v) = evalBasic expr == Nothing
     where expr = Mod (Val v) zero_i_expr
 
 
@@ -125,32 +124,32 @@ prop_testEvalPowIntNon0 a x = a /= 0 ==> testEval2IntArithmetic Pow (^) a x
 
 -- Skip sqrt-like as complex for negative a
 prop_testEvalPowFloatReg :: Positive Float -> Float -> Property
-prop_testEvalPowFloatReg (Positive a) x = a /= 0 ==> eval [] expr === Just expected
+prop_testEvalPowFloatReg (Positive a) x = a /= 0 ==> evalBasic expr === Just expected
     where
         expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
         expected = FloatVal (a**x)
 
 prop_testEvalPowFloatFractional :: Negative Float -> Float -> Property
-prop_testEvalPowFloatFractional (Negative a) x = isNaN (a**x) ==> eval [] expr === Nothing
+prop_testEvalPowFloatFractional (Negative a) x = isNaN (a**x) ==> evalBasic expr === Nothing
     where
         expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
 
 -- 0^x positive
 prop_testEvalPow0IntPos :: Positive Int -> Property
-prop_testEvalPow0IntPos (Positive x) = eval [] expr === Just (IntVal 0)
+prop_testEvalPow0IntPos (Positive x) = evalBasic expr === Just (IntVal 0)
     where expr = Pow zero_i_expr (Val (IntVal x))
 
 prop_testEvalPow0FloatPos :: Positive Float -> Property
-prop_testEvalPow0FloatPos (Positive x) = eval [] expr === Just (FloatVal 0.0)
+prop_testEvalPow0FloatPos (Positive x) = evalBasic expr === Just (FloatVal 0.0)
     where expr = Pow zero_f_expr (Val (FloatVal x))
 
 -- 0^ negative is like divide by zero
 prop_testEvalPowInt0Neg :: Negative Int -> Property
-prop_testEvalPowInt0Neg (Negative negInt) = eval [] expr === Nothing
+prop_testEvalPowInt0Neg (Negative negInt) = evalBasic expr === Nothing
     where expr = Pow zero_i_expr (Val (IntVal negInt))
 
 prop_testEvalPowFloat0Neg :: Negative Float -> Property
-prop_testEvalPowFloat0Neg (Negative negFloat) = eval [] expr === Nothing
+prop_testEvalPowFloat0Neg (Negative negFloat) = evalBasic expr === Nothing
     where expr = Pow zero_f_expr (Val (FloatVal negFloat))
 
 
@@ -163,40 +162,40 @@ isVNonNeg v = case v of
                     IntVal i -> i >= 0
 
 prop_testEvalPosNum :: NumberValue -> Property
-prop_testEvalPosNum (NumberValue v) = isVNonNeg v ==> eval [] expr === Just v
+prop_testEvalPosNum (NumberValue v) = isVNonNeg v ==> evalBasic expr === Just v
     where expr = Abs (Val v)
 
 prop_testEvalAbsNegInt :: Negative Int -> Bool
-prop_testEvalAbsNegInt (Negative i) = eval [] expr == Just expected
+prop_testEvalAbsNegInt (Negative i) = evalBasic expr == Just expected
     where
         expr = (Abs . Val . IntVal) i
         expected = IntVal (-i)
 
 prop_testEvalAbsNegFloat :: Negative Float -> Bool
-prop_testEvalAbsNegFloat (Negative f) = eval [] expr == Just expected
+prop_testEvalAbsNegFloat (Negative f) = evalBasic expr == Just expected
     where
         expr = (Abs . Val . FloatVal) f
         expected = FloatVal (-f)
 
 {- Square Root sqrt() -}
 prop_testSqrtInt :: Positive Int -> Property
-prop_testSqrtInt (Positive x) = eval [] expr === Just expected
+prop_testSqrtInt (Positive x) = evalBasic expr === Just expected
     where
         expr = Sqrt (Val (IntVal (x*x)))
         expected = FloatVal (fromIntegral x)
 
 prop_testSqrtNegInt :: Negative Int -> Property
-prop_testSqrtNegInt (Negative x) = eval [] expr === Nothing
+prop_testSqrtNegInt (Negative x) = evalBasic expr === Nothing
     where expr = Sqrt (Val (IntVal x))
 
 prop_testSqrtFloat :: Positive Float -> Property
-prop_testSqrtFloat (Positive x) = eval [] expr === Just expected
+prop_testSqrtFloat (Positive x) = evalBasic expr === Just expected
     where
         expr = Sqrt (Val (FloatVal (x*x)))
         expected = FloatVal x
 
 prop_testSqrtNegFloat :: Negative Float -> Property
-prop_testSqrtNegFloat (Negative x) = eval [] expr === Nothing
+prop_testSqrtNegFloat (Negative x) = evalBasic expr === Nothing
     where expr = Sqrt (Val (FloatVal x))
 
 return []

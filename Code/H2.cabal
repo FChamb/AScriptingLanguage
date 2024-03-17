@@ -73,5 +73,5 @@ executable H2
 test-suite quickcheck-test
     type: exitcode-stdio-1.0
     main-is: TestMain.hs
-    other-modules: Test TestConversion TestOperations Expr Parsing
+    other-modules: Test TestConversion TestOperations Expr Parsing Eval
     build-depends: base, QuickCheck
