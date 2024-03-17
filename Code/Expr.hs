@@ -210,10 +210,10 @@ pExpr = do t <- pFactor
             ||| do symbol "-"
                    e <- pExpr
                    return (Sub t e)
-                 ||| do symbol "++"
-                        e <- pExpr
-                        return (Concat t e)
-                    ||| return t
+            ||| do symbol "++"
+                   e <- pExpr
+                   return (Concat t e)
+            ||| return t
 
 -- Higher priority operations go here (e.g. multiply, divide)
 pFactor :: Parser Expr
@@ -224,10 +224,10 @@ pFactor = do f <- pTerm
                 ||| do symbol "/"
                        t <- pTerm
                        return (Div f t)
-                       ||| do symbol "%"
-                              t <- pFactor
-                              return (Mod f t)
-                              ||| return f
+                ||| do symbol "%"
+                       t <- pFactor
+                       return (Mod f t)
+                ||| return f
 
 -- Must be value, variable or something with brackets
 pTerm :: Parser Expr
@@ -238,49 +238,49 @@ pTerm = do v <- pValue
                   e <- pExpr
                   string ")"
                   return (ToString e)
-                  ||| do symbol "toInt"
-                         string "("
-                         e <- pExpr
-                         string ")"
-                         return (ToString e)
-                       ||| do symbol "toInt"
-                              string "("
-                              e <- pExpr
-                              string ")"
-                              return (ToInt e)
-                           ||| do symbol "abs"
-                                  string "("
-                                  e <- pExpr
-                                  string ")"
-                                  return (Abs e)
-                               ||| do symbol "pow"
-                                      symbol "("
-                                      t <- pExpr
-                                      symbol ","
-                                      u <- pExpr
-                                      symbol ")"
-                                      return (Pow t u)
-                                 ||| do symbol "sqrt"
-                                        string "("
-                                        e <- pExpr
-                                        string ")"
-                                        return (Sqrt e)
-                                    ||| do symbol "("
-                                           e <- pExpr
-                                           symbol ")"
-                                           return e
-                                           -- Needs to be last so it doesn't try to consume functions
-                                        ||| do v <- identifier
-                                               return (Var v)
+           ||| do symbol "toInt"
+                  string "("
+                  e <- pExpr
+                  string ")"
+                  return (ToString e)
+           ||| do symbol "toInt"
+                  string "("
+                  e <- pExpr
+                  string ")"
+                  return (ToInt e)
+           ||| do symbol "abs"
+                  string "("
+                  e <- pExpr
+                  string ")"
+                  return (Abs e)
+           ||| do symbol "pow"
+                  symbol "("
+                  t <- pExpr
+                  symbol ","
+                  u <- pExpr
+                  symbol ")"
+                  return (Pow t u)
+           ||| do symbol "sqrt"
+                  string "("
+                  e <- pExpr
+                  string ")"
+                  return (Sqrt e)
+           ||| do symbol "("
+                  e <- pExpr
+                  symbol ")"
+                  return e
+                  -- Needs to be last so it doesn't try to consume functions
+           ||| do v <- identifier
+                  return (Var v)
 
 -- Parsing of values
 pValue :: Parser Value
 pValue = do f <- float
             return (FloatVal f)
-            ||| do i <- integer
-                   return (IntVal i)
-                   ||| do s <- quotedString
-                          return (StrVal s)
+         ||| do i <- integer
+                return (IntVal i)
+         ||| do s <- quotedString
+                return (StrVal s)
 
 quotedString :: Parser String
 quotedString = do
