@@ -15,6 +15,33 @@ To run the project, use the script in the Code directory:
 ./run.sh
 ```
 
+# Usage #
+Printing values:
+```console
+print 1
+```
+
+Assigning variables:
+```console
+a = 100
+```
+
+Calculations can be done almost anywhere
+```console
+a = 10*50
+print a
+```
+OR
+```console
+print 10*50
+```
+
+Defining and calling functions:
+```console
+def square(a) { pow(a,2) }
+print square(4)
+```
+
 # Tests #
 To run the tests, use the script in the Code directory:
 ```console
