@@ -7,21 +7,11 @@ import System.Directory
 import Expr
 import Parsing
 
-data LState = LState { vars :: [(Name, Value)] }
+
 
 initLState :: LState
-initLState = LState []
+initLState = LState [] []
 
--- Given a variable name and a value, return a new set of variables with
--- that name and value added.
--- If it already exists, remove the old value
-updateVars :: Name -> Value -> [(Name, Value)] -> [(Name, Value)]
-updateVars name val vars = (name,val):(dropVar name vars)
-
-
--- Return a new set of variables with the given name removed
-dropVar :: Name -> [(Name, Value)] -> [(Name, Value)]
-dropVar name vars = filter (\(n, v) -> n /= name) vars
 
 {-process :: LState -> Command -> IO ()
 process st (Set var e) = do let st' = case (eval e) of
@@ -34,7 +24,7 @@ process st (Set var e) = do let st' = case (eval e) of
 
 process :: LState -> Command -> InputT IO ()
 process st (Set var e) = do
-    let evaled = eval (vars st) e
+    let evaled = eval (vars st) (funcs st) e
     let st' = case evaled of
                 Just x -> st{vars= (updateVars var x (vars st))}
                 Nothing -> st -- print bad ????
@@ -50,7 +40,7 @@ process st (InputSet var) = do
                        repl st'
 
 process st (Print e) = do
-    case eval (vars st) e of
+    case eval (vars st) (funcs st) e of
         Just evaled -> outputStrLn (show evaled)
         Nothing -> return ()
     -- Print the result of evaluation
@@ -62,6 +52,10 @@ process st (File f) = do
                  liftIO(loadFile f st)
     else do outputStrLn ("\"" ++ f ++ "\"" ++ "does not exist!")
             repl st
+
+process st (DefUserFunc name func) = do
+    let st' = st { funcs = (updateFunc name func (funcs st))}
+    repl st'
 
 process st (Help) = do
     outputStrLn("List of program operations: ")
