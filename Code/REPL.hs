@@ -6,7 +6,8 @@ import System.Directory
 
 import Expr
 import Parsing
-
+import Parsers
+import Eval
 
 
 initLState :: LState
