@@ -6,7 +6,7 @@ import Expr
 {-
  - Context Free Grammar:
  -
- - COMMAND -> VAR = EXPR | VAR = input | print EXPR
+ - COMMAND -> VAR = EXPR | VAR = input | print EXPR | def FUNCTION
  -
  - EXPR -> FACTOR
  -        | TERM + EXPR
@@ -18,8 +18,8 @@ import Expr
  -
  - # MUL, DIV, Modulo
  - FACTOR -> TERM
- -     | TERM * TERM
- -     | TERM / TERM
+ -     | TERM * FACTOR
+ -     | TERM / FACTOR
  -     | TERM mod TERM
  -
  - VAL = STRING | INT | FLOAT
@@ -83,13 +83,13 @@ pExpr = do t <- pFactor
 pFactor :: Parser Expr
 pFactor = do f <- pTerm
              do symbol "*"
-                t <- pTerm
+                t <- pFactor
                 return (Mul f t)
                 ||| do symbol "/"
-                       t <- pTerm
+                       t <- pFactor
                        return (Div f t)
                 ||| do symbol "%"
-                       t <- pFactor
+                       t <- pTerm
                        return (Mod f t)
                 ||| return f
 
