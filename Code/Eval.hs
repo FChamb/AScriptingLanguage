@@ -5,6 +5,7 @@ import Data.Maybe
 import Data.Fixed (divMod') -- For divMod'
 
 import Expr
+-- import Struct.BinaryTree
 
 eval :: Vars -> -- Variable name to value mapping
         Funcs ->
