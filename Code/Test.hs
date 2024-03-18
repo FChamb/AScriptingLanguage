@@ -32,38 +32,40 @@ instance Arbitrary ValidName where
 
 
 -- Simple wrapper for calling eval with no defined vars or funcs
-evalBasic :: Expr -> Maybe Value
+evalBasic :: Expr -> Either Error Value
 evalBasic = eval [] []
 
 
 -- Test direct values
 prop_testEvalVal :: Value -> Bool
-prop_testEvalVal value = evalBasic expr == Just value
+prop_testEvalVal value = evalBasic expr == Right value
     where expr = Val (value)
 
 
 -- Variables
 prop_getDefinedVar :: ValidName -> Value -> Bool
-prop_getDefinedVar (ValidName name) value = eval [(name, value)] [] (Var name) == Just value
+prop_getDefinedVar (ValidName name) value = eval [(name, value)] [] (Var name) == Right value
 
 prop_getDefinedVarFromMultiple :: [(ValidName, Value)] -> Property
 prop_getDefinedVarFromMultiple inputVars = do
         not (null uniqueVars) ==> do
             (name, value) <- elements uniqueVars
-            return $ eval uniqueVars [] (Var name) == Just value
+            return $ eval uniqueVars [] (Var name) == Right value
     where
         vars = map (\(ValidName n, v) -> (n,v)) inputVars
         uniqueVars = nubBy (\(n1, v1) (n2, v2) -> n1 == n2) vars
 
 prop_getUndefinedVar :: ValidName -> Bool
-prop_getUndefinedVar (ValidName name) = evalBasic (Var name) == Nothing
+prop_getUndefinedVar (ValidName name) = case evalBasic (Var name) of
+                                            Left (ValueError _) -> True
+                                            _ -> False
 
 
 
 
 {- Test concatenation of two strings -}
 prop_evalConcat :: String -> String -> Bool
-prop_evalConcat s1 s2 = evalBasic expr == Just expected
+prop_evalConcat s1 s2 = evalBasic expr == Right expected
     where
         expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
         expected = StrVal (s1 ++ s2)
@@ -72,7 +74,7 @@ prop_evalConcat s1 s2 = evalBasic expr == Just expected
 
 -- Try addition using variables
 prop_evalAddWithVars :: (ValidName, Int) -> (ValidName, Int) -> Bool
-prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars [] expr == Just (IntVal expected)
+prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars [] expr == Right (IntVal expected)
     where
         vars = [(na, IntVal a), (nb, IntVal b)]
         expr = Add (Var na) (Var nb)
@@ -80,7 +82,7 @@ prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars [] expr == 
 
 -- Try multiplication and addition in expression tree
 prop_evalAddAndMul :: Int -> Int -> Int -> Bool
-prop_evalAddAndMul a b c = evalBasic expr == Just (IntVal expected)
+prop_evalAddAndMul a b c = evalBasic expr == Right (IntVal expected)
     where
         subExpr :: Expr
         subExpr = Mul (Val (IntVal b)) (Val (IntVal c))

@@ -74,6 +74,7 @@ data Command = Set Name Expr -- assign an expression to a variable name
 
 -- Error data type
 data Error = ParseError String | MathError String | ValueError String
+    deriving (Eq)
 
 instance Show Error where
     show (ParseError i) = "ParseError: " ++ i
