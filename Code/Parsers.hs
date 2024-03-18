@@ -46,7 +46,7 @@ pCommand = do t <- identifier
                   return (Right (File f))
            ||| do string ":h"
                   return (Right Help)
-           ||| return (Left ParseError)
+           ||| return (Left (ParseError "Invalid command"))
 
 pFunc :: Parser Command
 pFunc = do symbol "def" -- Define a function

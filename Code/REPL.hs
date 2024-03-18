@@ -92,6 +92,6 @@ repl st = do outputStrLn (show (vars st))
              let parsed = fmap (parse pCommand) inp
              case parsed of
                 Nothing -> outputStrLn "EOF, goodbye"
-                Just [(Left e,_)] -> do outputStrLn "Parse error"
+                Just [(Left e,_)] -> do outputStrLn (errMsg e)
                                         repl st
                 Just [(Right cmd, "")] -> process st cmd
