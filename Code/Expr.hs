@@ -73,9 +73,10 @@ data Command = Set Name Expr -- assign an expression to a variable name
   deriving Show
 
 -- Error data type
-data Error = ParseError String | MathError String
+data Error = ParseError String | MathError String | ValueError String
     deriving Show
 
 errMsg :: Error -> String
 errMsg (ParseError s) = s
 errMsg (MathError s) = s
+errMsg (ValueError s) = s

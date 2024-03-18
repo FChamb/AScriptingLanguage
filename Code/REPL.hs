@@ -27,8 +27,8 @@ process :: LState -> Command -> InputT IO ()
 process st (Set var e) = do
     let evaled = eval (vars st) (funcs st) e
     let st' = case evaled of
-                Just x -> st{vars= (updateVars var x (vars st))}
-                Nothing -> st -- print bad ????
+                Right x -> st{vars= (updateVars var x (vars st))}
+                Left e -> st -- print bad ????
     repl st'
 
 process st (InputSet var) = do
@@ -42,8 +42,8 @@ process st (InputSet var) = do
 
 process st (Print e) = do
     case eval (vars st) (funcs st) e of
-        Just evaled -> outputStrLn (show evaled)
-        Nothing -> return ()
+        Right evaled -> outputStrLn (show evaled)
+        Left e -> return ()
     -- Print the result of evaluation
     repl st
 
