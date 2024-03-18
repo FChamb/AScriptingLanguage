@@ -95,7 +95,7 @@ eval vars fs (Pow x y) = do
 eval vars fs (Sqrt a) = do
     val <- eval vars fs a
     case val of
-        -- TO DO: ADD SOMETHING HERE TO PREVENT IMAGINARY NUMBERS
+        IntVal (-1) -> Left $ MathError "MathError: program does not support imaginary numbers"
         IntVal int -> Right (FloatVal (sqrt $ fromIntegral int))
         FloatVal flt -> Right (FloatVal (sqrt flt))
         _ -> Left $ MathError "MathError: flawed square root operation"
