@@ -14,6 +14,10 @@ To run the project, use the script in the Code directory:
 ```console
 ./run.sh
 ```
+or run with cabal:
+```console
+cabal run
+```
 
 # Usage #
 Printing values:

@@ -70,6 +70,7 @@ process st (Help) = do
     outputStrLn("  - sqrt a {Square Root}")
     outputStrLn("  - a = 1 {Assign variables}")
     outputStrLn("Lost of program commands: ")
+    outputStrLn("  - print ... {Print the Command}")
     outputStrLn("  - quit {Quit the Program}")
     outputStrLn("  - :f fileName {Load a File}")
     outputStrLn("  - :h {Show Program Commands")
