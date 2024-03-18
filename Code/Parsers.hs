@@ -40,15 +40,15 @@ pCommand = do t <- identifier
                   return (Right (Print e))
            ||| do string "quit"
                   return (Right Quit)
-           -- ||| do pFunc
+           ||| do pFunc
            ||| do string ":f"
                   f <- fileName
                   return (Right (File f))
            ||| do string ":h"
                   return (Right Help)
-           ||| return (Left (ParseError "Invalid command"))
+           ||| return (Left (ParseError "ParseError: Invalid command"))
 
-pFunc :: Parser Command
+pFunc :: Parser (Either Error Command)
 pFunc = do symbol "def" -- Define a function
            fName <- identifier
            symbol "("
@@ -59,8 +59,8 @@ pFunc = do symbol "def" -- Define a function
            retExpr <- pExpr
            symbol "}"
            if nub args == args
-              then return $ DefUserFunc fName (UserFunc args stmts retExpr)
-              else failure -- Argument names must be unique
+              then return $ Right (DefUserFunc fName (UserFunc args stmts retExpr))
+              else return (Left (ParseError "ParseError: Argument names must be unique"))
 
 pFuncStatement :: Parser FuncStatement
 pFuncStatement = do

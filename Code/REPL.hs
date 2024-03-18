@@ -90,8 +90,11 @@ repl :: LState -> InputT IO ()
 repl st = do outputStrLn (show (vars st))
              inp <- getInputLine "> "
              let parsed = fmap (parse pCommand) inp
+             outputStrLn ("parsed - " ++ show parsed)
              case parsed of
                 Nothing -> outputStrLn "EOF, goodbye"
                 Just [(Left e,_)] -> do outputStrLn (errMsg e)
                                         repl st
-                Just [(Right cmd, "")] -> process st cmd
+                Just [(Right cmd, "")] -> process st cmd -- successful if entire equation is consumed
+                Just [(Right cmd, a)] -> do outputStrLn $ "ParseError: flaw at or after `" ++ a ++ "`\n\tIn operation: " ++ show inp
+                                            repl st
