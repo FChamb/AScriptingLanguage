@@ -125,19 +125,23 @@ eval vars fs (ToFloat e) = do
         _ -> Left (ValueError "cannot convert to float")
 
 -- NEED TO FIX THIS
-{- eval vars fs (CallUserFunc name args) = do
-    (UserFunc fargs stmts retExpr) <- lookup name fs
+eval vars fs (CallUserFunc name args) = do
+    (UserFunc fargs stmts retExpr) <- case lookup name fs of
+        Nothing -> Left $ ValueError ("No such function: " ++ name)
+        Just f -> Right f
     if length args == length fargs
        then do evaledArgs <- sequence $ map (eval vars fs) args
                let fState = zip fargs evaledArgs
-               endState <- foldl (evalStmt) (Just fState) stmts
+               endState <- foldl (evalStmt) (Right fState) stmts
                eval endState fs retExpr
-       else Nothing
+       else Left (ParseError ("Wrong number of arguments to function " ++ name
+                               ++ ", got " ++ show (length args)
+                               ++ " expected: " ++ show (length fargs)))
     where
-        evalStmt :: Maybe [(Name, Value)] -> FuncStatement -> Maybe [(Name, Value)]
+        evalStmt :: Either Error Vars -> FuncStatement -> Either Error Vars
         evalStmt vars (FuncSetVar n e) = vars >>= updateEval n e
-        updateEval :: Name -> Expr -> [(Name, Value)] -> Maybe [(Name, Value)]
-        updateEval n e vs = eval vs fs e >>= \x -> Just $ updateVars n x vs -}
+        updateEval :: Name -> Expr -> Vars -> Either Error Vars
+        updateEval n e vs = eval vs fs e >>= \x -> Right $ updateVars n x vs
 
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i
