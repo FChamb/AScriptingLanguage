@@ -27,25 +27,26 @@ import Expr
  - VAL = STRING | INT | FLOAT
  -}
 
-pCommand :: Parser Command
+pCommand :: Parser (Either Error Command)
 pCommand = do t <- identifier
               symbol "="
               do symbol "input"
-                 return (InputSet t)
+                 return (Right (InputSet t))
                ||| do e <- pExpr
-                      return (Set t e)
+                      return (Right (Set t e))
            ||| do string "print"
                   space
                   e <- pExpr
-                  return (Print e)
+                  return (Right (Print e))
            ||| do string "quit"
-                  return Quit
-           ||| do pFunc
+                  return (Right Quit)
+           -- ||| do pFunc
            ||| do string ":f"
                   f <- fileName
-                  return (File f)
+                  return (Right (File f))
            ||| do string ":h"
-                  return Help
+                  return (Right Help)
+           ||| return (Left ParseError)
 
 pFunc :: Parser Command
 pFunc = do symbol "def" -- Define a function

@@ -71,3 +71,7 @@ data Command = Set Name Expr -- assign an expression to a variable name
              | Quit          -- Prompt for quiting program
              | Help          -- Prompt for showing helpful options
   deriving Show
+
+-- Error data type
+data Error = ParseError | MathError 
+    deriving Show

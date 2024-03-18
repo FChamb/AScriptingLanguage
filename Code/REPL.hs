@@ -91,8 +91,7 @@ repl st = do outputStrLn (show (vars st))
              inp <- getInputLine "> "
              let parsed = fmap (parse pCommand) inp
              case parsed of
-                  Nothing -> outputStrLn "EOF, goodbye"
-                  Just [(cmd, "")] -> -- Must parse entire input
-                          process st cmd
-                  _ -> do outputStrLn "Parse error"
-                          repl st
+                Nothing -> outputStrLn "EOF, goodbye"
+                Just [(Left e,_)] -> do outputStrLn "Parse error"
+                                        repl st
+                Just [(Right cmd, "")] -> process st cmd
