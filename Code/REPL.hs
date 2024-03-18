@@ -93,7 +93,7 @@ repl st = do outputStrLn (show (vars st))
              outputStrLn ("parsed - " ++ show parsed)
              case parsed of
                 Nothing -> outputStrLn "EOF, goodbye"
-                Just [(Left e,_)] -> do outputStrLn (errMsg e)
+                Just [(Left e,_)] -> do outputStrLn (show e)
                                         repl st
                 Just [(Right cmd, "")] -> process st cmd -- successful if entire equation is consumed
                 Just [(Right cmd, a)] -> do outputStrLn $ "ParseError: flaw at or after `" ++ a ++ "`\n\tIn operation: " ++ show inp
