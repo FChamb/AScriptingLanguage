@@ -11,6 +11,5 @@ main :: IO ()
 main = do
     args <- getArgs
     case args of
-        [file] -> do runInputT defaultSettings (repl initLState)
-                     loadFile file initLState
+        [file] -> do loadFile file initLState
         _ -> runInputT defaultSettings (repl initLState)
