@@ -26,10 +26,10 @@ process st (Set var e) = do let st' = case (eval e) of
 process :: LState -> Command -> InputT IO ()
 process st (Set var e) = do
     let evaled = eval (vars st) (funcs st) e
-    let st' = case evaled of
-                Right x -> st{vars= (updateVars var x (vars st))}
-                Left e -> st -- print bad ????
-    repl st'
+    case evaled of
+        Right x -> repl $ st{vars= (updateVars var x (vars st))}
+        Left e -> do outputStrLn (show e) 
+                     repl st
 
 process st (InputSet var) = do
     input <- getInputLine ""
