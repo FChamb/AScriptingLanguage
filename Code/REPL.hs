@@ -43,8 +43,7 @@ process st (InputSet var) = do
 process st (Print e) = do
     case eval (vars st) (funcs st) e of
         Right evaled -> outputStrLn (show evaled)
-        Left e -> return ()
-    -- Print the result of evaluation
+        Left e -> outputStrLn (show e) 
     repl st
 
 process st (File f) = do
@@ -90,11 +89,10 @@ repl :: LState -> InputT IO ()
 repl st = do outputStrLn (show (vars st))
              inp <- getInputLine "> "
              let parsed = fmap (parse pCommand) inp
-             outputStrLn ("parsed - " ++ show parsed)
              case parsed of
                 Nothing -> outputStrLn "EOF, goodbye"
                 Just [(Left e,_)] -> do outputStrLn (show e)
                                         repl st
                 Just [(Right cmd, "")] -> process st cmd -- successful if entire equation is consumed
-                Just [(Right cmd, a)] -> do outputStrLn $ "ParseError: flaw at or after `" ++ a ++ "`\n\tIn operation: " ++ show inp
+                Just [(Right cmd, a)] -> do outputStrLn $ "flaw at or after `" ++ a ++ "`\n\tIn operation: " ++ show inp
                                             repl st
