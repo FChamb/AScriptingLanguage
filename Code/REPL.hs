@@ -85,7 +85,7 @@ loadFile file st = runInputTBehavior (useFile file) defaultSettings (repl st)
 remember :: State -> Command -> State
 remember state command = State {vars = vars state, history = (history state ++ [command])}
 
-repeatCommand :: State -> Int -> [Command] -> InputT IO ()
+repeatCommand :: State -> Int -> Command -> InputT IO ()
 repeatCommand st n cmd
     | n <= 0 = repl st
     | otherwise = do process st cmd

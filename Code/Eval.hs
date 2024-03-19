@@ -104,6 +104,7 @@ eval vars fs (ToString e) = do
     case eval vars fs e of
         Right (StrVal s) -> Right $ StrVal s
         Right (IntVal i) -> Right $ StrVal (show i)
+        Right (FloatVal f) -> Right $ StrVal (show f)
         Left _ -> Left (ValueError "cannot convert to string")
 
 eval vars fs (ToInt e) = do
@@ -118,11 +119,12 @@ eval vars fs (ToInt e) = do
 eval vars fs (ToFloat e) = do
     value <- eval vars fs e
     case value of
-        StrVal s -> case readMaybe s of 
+        StrVal s -> case readMaybe s of
                         Just x -> Right (FloatVal x)
                         Nothing -> Left (ValueError "cannot convert to float")
+        IntVal i -> Right (FloatVal (fromIntegral i))
         FloatVal f -> Right (FloatVal f)
-        _ -> Left (ValueError "cannot convert to float")
+
 
 {-
 -- NEED TO FIX THIS
