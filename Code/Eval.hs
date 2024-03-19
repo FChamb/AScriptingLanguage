@@ -5,16 +5,16 @@ import Data.Maybe
 import Data.Fixed (divMod') -- For divMod'
 
 import Expr
--- import Struct.BinaryTree
+import BinaryTree
 
-eval :: Vars -> -- Variable name to value mapping
+eval :: Tree (Name, Value) -> -- Variable name to value mapping
         Funcs ->
         Expr -> -- Expression to evaluate
         Either Error Value -- Result (if no errors such as missing variables)
 eval vars fs (Val x) = Right x -- for values, just give the value directly
-eval vars fs (Var name) = case lookup name vars of -- for values, just give the value directly
-                               Just x -> Right x
-                               Nothing -> Left $ ValueError("value does not exist")
+eval vars fs (Var name) = case value name vars of -- for values, just give the value directly
+                               Right x -> Right x
+                               Left _ -> Left $ ValueError("value does not exist")
                                 
 eval vars fs (Add x y) = do
     xVal <- eval vars fs x
@@ -124,11 +124,12 @@ eval vars fs (ToFloat e) = do
         FloatVal f -> Right (FloatVal f)
         _ -> Left (ValueError "cannot convert to float")
 
+{-
 -- NEED TO FIX THIS
 eval vars fs (CallUserFunc name args) = do
-    (UserFunc fargs stmts retExpr) <- case lookup name fs of
-        Nothing -> Left $ ValueError ("No such function: " ++ name)
-        Just f -> Right f
+    (UserFunc fargs stmts retExpr) <- case value name vars fs of
+        Left _ -> Left $ ValueError ("No such function: " ++ name)
+        Right f -> Right f
     if length args == length fargs
        then do evaledArgs <- sequence $ map (eval vars fs) args
                let fState = zip fargs evaledArgs
@@ -138,10 +139,11 @@ eval vars fs (CallUserFunc name args) = do
                                ++ ", got " ++ show (length args)
                                ++ " expected: " ++ show (length fargs)))
     where
-        evalStmt :: Either Error Vars -> FuncStatement -> Either Error Vars
+        evalStmt :: Either Error (Tree (Name, Value)) -> FuncStatement -> Either Error (Tree (Name, Value))
         evalStmt vars (FuncSetVar n e) = vars >>= updateEval n e
         updateEval :: Name -> Expr -> Vars -> Either Error Vars
         updateEval n e vs = eval vs fs e >>= \x -> Right $ updateVars n x vs
+-}
 
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i

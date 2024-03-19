@@ -40,6 +40,9 @@ pCommand = do t <- identifier
                   return (Right (Print e))
            ||| do string "quit"
                   return (Right Quit)
+           ||| do char '!'
+                  i <- nat
+                  return (Right (Repeat i))
            ||| do pFunc
            ||| do string ":f"
                   f <- fileName

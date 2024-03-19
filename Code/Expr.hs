@@ -1,5 +1,6 @@
 module Expr where
 
+import BinaryTree
 
 type Name = String
 
@@ -10,7 +11,8 @@ instance Show Value where
     show (IntVal i) = show i
     show (FloatVal f) = show f
     show (StrVal s) = s
-type Vars = [(Name, Value)]
+
+type Vars = Tree (Name, Value)
 
 {-
  - Functions
@@ -25,19 +27,13 @@ data FuncStatement = FuncSetVar Name Expr -- TODO: support some kind of if too?
     deriving (Show)
 type Funcs = [(Name, UserFunc)]
 
-data LState = LState { vars :: Vars,
-                       funcs :: Funcs }
+data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}
 
 -- Given a variable name and a value, return a new set of variables with
 -- that name and value added.
 -- If it already exists, remove the old value
-updateVars :: Name -> Value -> Vars -> Vars
-updateVars name val vars = (name,val):(dropVar name vars)
-
-
--- Return a new set of variables with the given name removed
-dropVar :: Name -> Vars -> Vars
-dropVar name vars = filter (\(n, v) -> n /= name) vars
+updateVars :: Name -> Value -> State -> State
+updateVars name val st = st {vars = insert (name, val) (vars st)}
 
 updateFunc :: Name -> UserFunc -> Funcs -> Funcs
 updateFunc name func funcs = (name, func):removed

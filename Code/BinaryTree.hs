@@ -1,4 +1,4 @@
-module Struct.BinaryTree where
+module BinaryTree where
 
 data Tree a = Empty | Tree a (Tree a) (Tree a)
     deriving (Show, Eq)

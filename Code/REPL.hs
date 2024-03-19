@@ -8,10 +8,10 @@ import Expr
 import Parsing
 import Parsers
 import Eval
+import BinaryTree
 
-
-initLState :: LState
-initLState = LState [] []
+initState :: State
+initState = State Empty [] []
 
 
 {-process :: LState -> Command -> IO ()
@@ -23,12 +23,12 @@ process st (Set var e) = do let st' = case (eval e) of
                             repl st'
 -}
 
-process :: LState -> Command -> InputT IO ()
+process :: State -> Command -> InputT IO ()
 process st (Set var e) = do
     let evaled = eval (vars st) (funcs st) e
     case evaled of
-        Right x -> repl $ st{vars= (updateVars var x (vars st))}
-        Left e -> do outputStrLn (show e) 
+        Right x -> repl $ st{vars = insert (var, x) (vars st)}
+        Left e -> do outputStrLn (show e)
                      repl st
 
 process st (InputSet var) = do
@@ -36,7 +36,7 @@ process st (InputSet var) = do
     case input of
         Nothing -> do outputStrLn "EOF, cancelling input"
                       repl st
-        Just inp -> do let newVars = updateVars var (StrVal inp) (vars st)
+        Just inp -> do let newVars = insert (var, StrVal inp) (vars st)
                        let st' = st { vars = newVars }
                        repl st'
 
@@ -52,6 +52,9 @@ process st (File f) = do
                  liftIO(loadFile f st)
     else do outputStrLn ("\"" ++ f ++ "\"" ++ "does not exist!")
             repl st
+
+--process st (Repeat i) = do
+--    if length
 
 process st (DefUserFunc name func) = do
     let st' = st { funcs = (updateFunc name func (funcs st))}
@@ -77,15 +80,18 @@ process st (Help) = do
 
 process st (Quit) = outputStrLn("Closing")
 
-loadFile :: Name -> LState -> IO ()
+loadFile :: Name -> State -> IO ()
 loadFile file st = runInputTBehavior (useFile file) defaultSettings (repl st)
+
+remember :: State -> Command -> State
+remember state command = State {vars = vars state, history = (history state ++ [command])}
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls
 -- 'process' to process the command.
 -- 'process' will call 'repl' when done, so the system loops.
 
-repl :: LState -> InputT IO ()
+repl :: State -> InputT IO ()
 repl st = do outputStrLn (show (vars st))
              inp <- getInputLine "> "
              let parsed = fmap (parse pCommand) inp
