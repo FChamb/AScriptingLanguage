@@ -5,6 +5,8 @@ import Test.QuickCheck
 
 import Expr
 import Eval
+import BinaryTree
+
 import Test
 
 newtype NumberValue = NumberValue Value
@@ -207,33 +209,33 @@ prop_testSqrtNegFloat (Negative x) = ensureMathError $ evalBasic expr
 
 -- Zero arg function that returns a "constant"
 prop_testZeroArgFunc :: Value -> Property
-prop_testZeroArgFunc v = eval [] [("f", func)] (CallUserFunc "f" []) === Right v
+prop_testZeroArgFunc v = eval Empty [("f", func)] (CallUserFunc "f" []) === Right v
     where func = UserFunc [] [] (Val v)
 
 -- Single arg function that returns argument
 prop_testOneArgFunc :: Value -> Property
-prop_testOneArgFunc v = eval [] [("f", func)] (CallUserFunc "f" [Val v]) === Right v
+prop_testOneArgFunc v = eval Empty [("f", func)] (CallUserFunc "f" [Val v]) === Right v
     where func = UserFunc ["a"] [] (Var "a")
 
 -- Test function thats adds its two input arguments
 prop_testTwoArgAddFunc :: NumberValue -> NumberValue -> Property
-prop_testTwoArgAddFunc (NumberValue n1) (NumberValue n2) = eval [] [("f", func)] (CallUserFunc "f" [v1, v2]) === expected
+prop_testTwoArgAddFunc (NumberValue n1) (NumberValue n2) = eval Empty [("f", func)] (CallUserFunc "f" [v1, v2]) === expected
     where
         v1 = Val n1
         v2 = Val n2
         func = UserFunc ["a", "b"] [] (Add (Var "a") (Var "b"))
-        expected = eval [] [] (Add v1 v2)
+        expected = evalBasic (Add v1 v2)
 
 -- Test function that creates changes the value of a variable in its local function scope
 -- i.e
 -- f(a,b) { a = a + b; a }
 prop_setVarInFunc :: NumberValue -> NumberValue -> Property
-prop_setVarInFunc (NumberValue n1) (NumberValue n2) = eval [] [("f", func)] (CallUserFunc "f" [v1, v2]) === expected
+prop_setVarInFunc (NumberValue n1) (NumberValue n2) = eval Empty [("f", func)] (CallUserFunc "f" [v1, v2]) === expected
     where
         v1 = Val n1
         v2 = Val n2
         func = UserFunc ["a", "b"] [FuncSetVar "a" (Add (Var "a") (Var "b"))] (Var "a")
-        expected = eval [] [] (Add v1 v2)
+        expected = evalBasic (Add v1 v2)
 
 
 return []

@@ -41,3 +41,6 @@ contains n (Tree node l r) = case compare n (fst node) of
     EQ -> True
     LT -> (contains n l)
     GT -> (contains n r)
+
+treeFromList :: Ord n => [(n, v)] -> Tree (n, v)
+treeFromList = foldl (\tree pair -> insert pair tree) Empty
