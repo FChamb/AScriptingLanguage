@@ -40,16 +40,30 @@ pCommand = do t <- identifier
                   return (Right (Print e))
            ||| do string "quit"
                   return (Right Quit)
-           ||| do char '!'
-                  i <- nat
-                  return (Right (Repeat i))
            ||| do pFunc
+           ||| do string "repeat"
+                  space
+                  i <- integer
+                  space
+                  block <- pBlock
+                  return (Right (Repeat i block))
            ||| do string ":f"
                   f <- fileName
                   return (Right (File f))
            ||| do string ":h"
                   return (Right Help)
            ||| return (Left (ParseError "ParseError: Invalid command"))
+
+pBlock :: Parser Command
+pBlock = do
+    symbol "{"
+    space
+    c <- pCommand
+    space
+    symbol "}"
+    case c of
+        Left err -> error (show err)
+        Right command -> return command
 
 pFunc :: Parser (Either Error Command)
 pFunc = do symbol "def" -- Define a function

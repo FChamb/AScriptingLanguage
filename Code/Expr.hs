@@ -58,14 +58,14 @@ data Expr = Add Expr Expr
   deriving (Show, Eq)
 
 -- These are the REPL commands
-data Command = Set Name Expr -- assign an expression to a variable name
-             | Print Expr    -- evaluate an expression and print the result
-             | InputSet Name -- Prompt for input and store into variable
-             | File Name     -- Prompt for loading a file to run
-             | Repeat Int    -- Prompt for repeating a command
+data Command = Set Name Expr             -- assign an expression to a variable name
+             | Print Expr                -- evaluate an expression and print the result
+             | InputSet Name             -- Prompt for input and store into variable
+             | File Name                 -- Prompt for loading a file to run
+             | Repeat Int Command        -- Prompt for repeating a command
              | DefUserFunc Name UserFunc -- Define a function
-             | Quit          -- Prompt for quiting program
-             | Help          -- Prompt for showing helpful options
+             | Quit                      -- Prompt for quiting program
+             | Help                      -- Prompt for showing helpful options
   deriving Show
 
 -- Error data type

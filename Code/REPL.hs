@@ -53,8 +53,7 @@ process st (File f) = do
     else do outputStrLn ("\"" ++ f ++ "\"" ++ "does not exist!")
             repl st
 
---process st (Repeat i) = do
---    if length
+process st (Repeat n cmd) = repeatCommand st n cmd
 
 process st (DefUserFunc name func) = do
     let st' = st { funcs = (updateFunc name func (funcs st))}
@@ -85,6 +84,12 @@ loadFile file st = runInputTBehavior (useFile file) defaultSettings (repl st)
 
 remember :: State -> Command -> State
 remember state command = State {vars = vars state, history = (history state ++ [command])}
+
+repeatCommand :: State -> Int -> [Command] -> InputT IO ()
+repeatCommand st n cmd
+    | n <= 0 = repl st
+    | otherwise = do process st cmd
+                     repeatCommand st (n - 1) cmd
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls
