@@ -52,7 +52,7 @@ pCommand = do t <- identifier
                   return (Right (File f))
            ||| do string ":h"
                   return (Right Help)
-           ||| return (Left (ParseError "ParseError: Invalid command"))
+           ||| return (Left (ParseError "Invalid command"))
 
 pBlock :: Parser Command
 pBlock = do
@@ -77,7 +77,7 @@ pFunc = do symbol "def" -- Define a function
            symbol "}"
            if nub args == args
               then return $ Right (DefUserFunc fName (UserFunc args stmts retExpr))
-              else return (Left (ParseError "ParseError: Argument names must be unique"))
+              else return (Left (ParseError "Argument names must be unique"))
 
 pFuncStatement :: Parser FuncStatement
 pFuncStatement = do

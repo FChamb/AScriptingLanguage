@@ -2,7 +2,7 @@ module Eval where
 
 import Text.Read
 import Data.Maybe
-import Data.Fixed (divMod') -- For divMod'
+import Data.Fixed (divMod') 
 
 import Expr
 import BinaryTree
@@ -88,6 +88,7 @@ eval vars fs (Pow x y) = do
     exp <- eval vars fs y
     case (base, exp) of
         (IntVal intA, IntVal intB) -> Right (IntVal (intA ^ intB))
+        -- case for negative exponent w integers
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA ** fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int ** flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt ** fromIntegral int))
@@ -96,6 +97,7 @@ eval vars fs (Sqrt a) = do
     val <- eval vars fs a
     case val of
         IntVal (-1) -> Left $ MathError "program does not support imaginary numbers"
+        -- all negatives
         IntVal int -> Right (FloatVal (sqrt $ fromIntegral int))
         FloatVal flt -> Right (FloatVal (sqrt flt))
         _ -> Left $ MathError "flawed square root operation"
