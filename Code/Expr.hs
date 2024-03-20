@@ -25,7 +25,7 @@ data UserFunc = UserFunc [Name] [FuncStatement] Expr
     deriving (Show)
 data FuncStatement = FuncSetVar Name Expr -- TODO: support some kind of if too?
     deriving (Show)
-type Funcs = [(Name, UserFunc)]
+type Funcs = Tree (Name, UserFunc)
 
 data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}
 
@@ -55,6 +55,7 @@ data Expr = Add Expr Expr
           | CallUserFunc Name [Expr] -- User defined function, with variable number of arguments
           | Val Value
           | Var Name
+          | If Expr Expr
   deriving (Show, Eq)
 
 -- These are the REPL commands

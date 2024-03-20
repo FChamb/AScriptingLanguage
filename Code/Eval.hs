@@ -7,7 +7,7 @@ import Data.Fixed (divMod') -- For divMod'
 import Expr
 import BinaryTree
 
-eval :: Tree (Name, Value) -> -- Variable name to value mapping
+eval :: Vars -> -- Variable name to value mapping
         Funcs ->
         Expr -> -- Expression to evaluate
         Either Error Value -- Result (if no errors such as missing variables)
@@ -125,8 +125,6 @@ eval vars fs (ToFloat e) = do
         IntVal i -> Right (FloatVal (fromIntegral i))
         FloatVal f -> Right (FloatVal f)
 
-
-{-
 -- NEED TO FIX THIS
 eval vars fs (CallUserFunc name args) = do
     (UserFunc fargs stmts retExpr) <- case value name vars fs of
@@ -145,7 +143,6 @@ eval vars fs (CallUserFunc name args) = do
         evalStmt vars (FuncSetVar n e) = vars >>= updateEval n e
         updateEval :: Name -> Expr -> Vars -> Either Error Vars
         updateEval n e vs = eval vs fs e >>= \x -> Right $ updateVars n x vs
--}
 
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i
