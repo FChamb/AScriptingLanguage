@@ -127,22 +127,22 @@ eval vars fs (ToFloat e) = do
 
 -- NEED TO FIX THIS
 eval vars fs (CallUserFunc name args) = do
-    (UserFunc fargs stmts retExpr) <- case value name vars fs of
+    (UserFunc fargs stmts retExpr) <- case value name fs of
         Left _ -> Left $ ValueError ("No such function: " ++ name)
         Right f -> Right f
     if length args == length fargs
        then do evaledArgs <- sequence $ map (eval vars fs) args
-               let fState = zip fargs evaledArgs
+               let fState = treeFromList $ zip fargs evaledArgs
                endState <- foldl (evalStmt) (Right fState) stmts
                eval endState fs retExpr
        else Left (ParseError ("Wrong number of arguments to function " ++ name
                                ++ ", got " ++ show (length args)
                                ++ " expected: " ++ show (length fargs)))
     where
-        evalStmt :: Either Error (Tree (Name, Value)) -> FuncStatement -> Either Error (Tree (Name, Value))
+        evalStmt :: Either Error Vars -> FuncStatement -> Either Error Vars
         evalStmt vars (FuncSetVar n e) = vars >>= updateEval n e
         updateEval :: Name -> Expr -> Vars -> Either Error Vars
-        updateEval n e vs = eval vs fs e >>= \x -> Right $ updateVars n x vs
+        updateEval n e vs = eval vs fs e >>= \v -> Right $ insert (n, v) vs
 
 intVal :: Value -> Maybe Int
 intVal (IntVal i) = Just i

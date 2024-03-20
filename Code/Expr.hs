@@ -36,11 +36,8 @@ data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Comm
 updateVars :: Name -> Value -> State -> State
 updateVars name val st = st {vars = insert (name, val) (vars st)}
 
-updateFunc :: Name -> UserFunc -> Funcs -> Funcs
-updateFunc name func funcs = (name, func):removed
-    where removed = filter (\(n, _) -> n /= name) funcs
--- At first, 'Expr' contains only addition, conversion to strings, and integer
--- values. You will need to add other operations, and variables
+{- An Expression is a tree-like data type that can be evaluated to a Value,
+ - without any IO. It only consists of mathematical statements -}
 data Expr = Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr

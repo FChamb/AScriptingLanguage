@@ -56,7 +56,7 @@ process st (File f) = do
 process st (Repeat n cmd) = repeatCommand st n cmd
 
 process st (DefUserFunc name func) = do
-    let st' = st { funcs = (updateFunc name func (funcs st))}
+    let st' = st { funcs = (insert name func (funcs st))}
     repl st'
 
 process st (Help) = do

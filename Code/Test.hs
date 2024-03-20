@@ -34,7 +34,7 @@ instance Arbitrary ValidName where
 
 -- Simple wrapper for calling eval with no defined vars or funcs
 evalBasic :: Expr -> Either Error Value
-evalBasic = eval Empty []
+evalBasic = eval Empty Empty
 
 -- Test direct values
 prop_testEvalVal :: Value -> Bool
@@ -44,7 +44,7 @@ prop_testEvalVal value = evalBasic expr == Right value
 
 -- Variables
 prop_getDefinedVar :: ValidName -> Value -> Bool
-prop_getDefinedVar (ValidName name) value = eval vars [] (Var name) == Right value
+prop_getDefinedVar (ValidName name) value = eval vars Empty (Var name) == Right value
     where
         vars = treeFromList [(name, value)]
 
@@ -52,7 +52,7 @@ prop_getDefinedVarFromMultiple :: [(ValidName, Value)] -> Property
 prop_getDefinedVarFromMultiple inputVars = do
         not (null uniqueVars) ==> do
             (name, value) <- elements uniqueVars
-            return $ eval varsT [] (Var name) == Right value
+            return $ eval varsT Empty (Var name) == Right value
     where
         vars = map (\(ValidName n, v) -> (n,v)) inputVars
         uniqueVars = nubBy (\(n1, v1) (n2, v2) -> n1 == n2) vars
@@ -77,7 +77,7 @@ prop_evalConcat s1 s2 = evalBasic expr == Right expected
 
 -- Try addition using variables
 prop_evalAddWithVars :: (ValidName, Int) -> (ValidName, Int) -> Bool
-prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars [] expr == Right (IntVal expected)
+prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars Empty expr == Right (IntVal expected)
     where
         vars = treeFromList [(na, IntVal a), (nb, IntVal b)]
         expr = Add (Var na) (Var nb)
