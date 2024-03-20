@@ -193,26 +193,13 @@ prop_testEvalAbsNegFloat (Negative f) = evalBasic expr == Right expected
         expected = FloatVal (-f)
 
 {- Square Root sqrt() -}
-prop_testSqrtInt :: Positive Int -> Property
-prop_testSqrtInt (Positive x) = evalBasic expr === Right expected
+prop_testSqrt :: Value -> Property
+prop_testSqrt (StrVal v) = checkEvalValueError $ Sqrt (Val (StrVal v))
+prop_testSqrt value | x < 0 = checkEvalMathError $ Sqrt (Val value)
+                    | otherwise = evalBasic (Sqrt (Val value)) === Right expected
     where
-        expr = Sqrt (Val (IntVal (x*x)))
-        expected = FloatVal (fromIntegral x)
-
-prop_testSqrtNegInt :: Negative Int -> Property
-prop_testSqrtNegInt (Negative x) = ensureMathError $ evalBasic expr
-    where expr = Sqrt (Val (IntVal x))
-
-prop_testSqrtFloat :: Positive Float -> Property
-prop_testSqrtFloat (Positive x) = evalBasic expr === Right expected
-    where
-        expr = Sqrt (Val (FloatVal (x*x)))
-        expected = FloatVal x
-
-prop_testSqrtNegFloat :: Negative Float -> Property
-prop_testSqrtNegFloat (Negative x) = ensureMathError $ evalBasic expr
-    where expr = Sqrt (Val (FloatVal x))
-
+        x = numToFloat value
+        expected = FloatVal $ x ** 0.5
 
 {- Call Functions -}
 
