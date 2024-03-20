@@ -1,3 +1,4 @@
 x = 1
 y = 2
 print (x + y)
+repeat 5 { print "Hello, world!" }
