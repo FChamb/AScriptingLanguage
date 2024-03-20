@@ -10,10 +10,10 @@ import Eval
 import BinaryTree
 
 instance Arbitrary Value where
-    arbitrary = oneof [
-        fmap (StrVal) arbitrary,
-        fmap (IntVal) arbitrary,
-        fmap (FloatVal) arbitrary
+    arbitrary = frequency [
+        (1, fmap (StrVal) arbitrary),
+        (2, fmap (IntVal) arbitrary),
+        (2, fmap (FloatVal) arbitrary)
         ]
 
 

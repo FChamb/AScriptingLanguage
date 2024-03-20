@@ -9,16 +9,17 @@ import BinaryTree
 
 import Test
 
-newtype NumberValue = NumberValue Value
+-- Either IntVal or FloatVal
+newtype NVal = NVal Value
     deriving (Show)
 
-instance Arbitrary NumberValue where
-    arbitrary = fmap NumberValue (oneof [
+instance Arbitrary NVal where
+    arbitrary = fmap NVal (oneof [
         fmap (IntVal) arbitrary,
         fmap (FloatVal) arbitrary
         ])
 
--- Convert a Value (NumberValue) to a Float
+-- Convert a Value (NVal) to a Float
 numToFloat :: Value -> Float
 numToFloat v = case v of
                 IntVal i -> fromIntegral i
@@ -52,52 +53,52 @@ checkEval2Float opExpr fResult x y = evalBasic expr === Right expected
         expr = opExpr (Val (FloatVal x)) (Val (FloatVal y))
         expected = FloatVal (fResult x y)
 
-testEval2MixedComArithmetic :: TwoArgOperation -> (Float -> Float -> Float) -> Int -> Float -> Property
-testEval2MixedComArithmetic opExpr fResult i f = evalBasic expr1 === Right expected .&&. evalBasic expr2 === Right expected
-    where
-        a = Val (IntVal i)
-        b = Val (FloatVal f)
-        expr1 = opExpr a b
-        expr2 = opExpr b a
-        expected = FloatVal (fResult f (fromIntegral i))
+ensureMathError :: Show a => Either Error a -> Property
+ensureMathError (Left (MathError _)) = property True
+ensureMathError other = counterexample ("Expected MathError, got: " ++ show other) False
+
+ensureValueError :: Show a => Either Error a -> Property
+ensureValueError (Left (ValueError _)) = property True
+ensureValueError other = counterexample ("Expected ValueError, got: " ++ show other) False
+
+checkEvalValueError :: Expr -> Property
+checkEvalValueError expr = ensureValueError $ evalBasic expr
 
 {- Addition a + b -}
-prop_testEvalAdd :: NumberValue -> NumberValue -> Property
-prop_testEvalAdd (NumberValue (IntVal a)) (NumberValue (IntVal b)) = checkEval2Int Add (+) a b
-prop_testEvalAdd (NumberValue a) (NumberValue b) = checkEval2Float Add (+) (numToFloat a) (numToFloat b)
+prop_testEvalAdd :: Value -> Value -> Property
+prop_testEvalAdd (StrVal a) b = checkEvalValueError $ Add (Val (StrVal a)) (Val b)
+prop_testEvalAdd a (StrVal b) = checkEvalValueError $ Add (Val a) (Val (StrVal b))
+prop_testEvalAdd (IntVal a) (IntVal b) = checkEval2Int Add (+) a b
+prop_testEvalAdd a b = checkEval2Float Add (+) (numToFloat a) (numToFloat b)
 
 {- Subtraction a - b -}
-prop_testEvalSub :: NumberValue -> NumberValue -> Property
-prop_testEvalSub (NumberValue (IntVal a)) (NumberValue (IntVal b)) = checkEval2Int Sub (-) a b
-prop_testEvalSub (NumberValue a) (NumberValue b) = checkEval2Float Sub (-) (numToFloat a) (numToFloat b)
+prop_testEvalSub :: Value -> Value -> Property
+prop_testEvalSub (StrVal a) b = checkEvalValueError $ Sub (Val (StrVal a)) (Val b)
+prop_testEvalSub a (StrVal b) = checkEvalValueError $ Sub (Val a) (Val (StrVal b))
+prop_testEvalSub (IntVal a) (IntVal b) = checkEval2Int Sub (-) a b
+prop_testEvalSub a b = checkEval2Float Sub (-) (numToFloat a) (numToFloat b)
 
 {- Multiplication a * b -}
-prop_testEvalMul :: NumberValue -> NumberValue -> Property
-prop_testEvalMul (NumberValue (IntVal a)) (NumberValue (IntVal b)) = checkEval2Int Mul (*) a b
-prop_testEvalMul (NumberValue a) (NumberValue b) = checkEval2Float Mul (*) (numToFloat a) (numToFloat b)
+prop_testEvalMul :: Value -> Value -> Property
+prop_testEvalMul (StrVal a) b = checkEvalValueError $ Mul (Val (StrVal a)) (Val b)
+prop_testEvalMul a (StrVal b) = checkEvalValueError $ Mul (Val a) (Val (StrVal b))
+prop_testEvalMul (IntVal a) (IntVal b) = checkEval2Int Mul (*) a b
+prop_testEvalMul a b = checkEval2Float Mul (*) (numToFloat a) (numToFloat b)
 
 
 zero_i_expr :: Expr
 zero_i_expr = Val (IntVal 0)
 zero_f_expr :: Expr
 zero_f_expr = Val (FloatVal 0.0)
-
-ensureMathError :: Show a => Either Error a -> Property
-ensureMathError (Left (MathError _)) = property True
-ensureMathError other = counterexample ("Expected MathError, got: " ++ show other) False
-
 {- Division a / b -}
-prop_testDiv :: NumberValue -> NumberValue -> Property
-prop_testDiv (NumberValue a) (NumberValue (IntVal 0)) = ensureMathError $ evalBasic expr
-    where expr = Div (Val a) zero_i_expr
-
-prop_testDiv (NumberValue a) (NumberValue (FloatVal 0.0)) = ensureMathError $ evalBasic expr
-    where expr = Div (Val a) zero_f_expr
-
-prop_testDiv (NumberValue (IntVal a)) (NumberValue (IntVal b)) =
-    a `mod` b /= 0 ==> checkEval2Float Div (/) (fromIntegral a) (fromIntegral b)
-
-prop_testDiv (NumberValue a) (NumberValue b) = checkEval2Float Div (/) (numToFloat a) (numToFloat b)
+prop_testDiv :: Value -> Value -> Property
+prop_testDiv (StrVal a) b = checkEvalValueError $ Div (Val (StrVal a)) (Val b)
+prop_testDiv a (StrVal b) = checkEvalValueError $ Div (Val a) (Val (StrVal b))
+prop_testDiv a (IntVal 0) = ensureMathError $ evalBasic (Div (Val a) zero_i_expr)
+prop_testDiv a (FloatVal 0.0) = ensureMathError $ evalBasic (Div (Val a) zero_f_expr)
+prop_testDiv (IntVal a) (IntVal b) = a `mod` b /= 0 ==>
+                                     checkEval2Float Div (/) (fromIntegral a) (fromIntegral b)
+prop_testDiv a b = checkEval2Float Div (/) (numToFloat a) (numToFloat b)
 
 -- Check integer division when they divide perfectly
 prop_testIntDiv :: Int -> Int -> Property
@@ -107,8 +108,8 @@ prop_testIntDiv a b = b /= 0 ==> checkEval2Int Div (div) (a*b) b
 prop_testEvalMod :: Int -> Int -> Property
 prop_testEvalMod a b = b /= 0 ==> checkEval2Int Mod mod a b
 
-prop_testEvalMod0 :: NumberValue -> Property
-prop_testEvalMod0 (NumberValue v) = ensureMathError $ evalBasic expr
+prop_testEvalMod0 :: NVal -> Property
+prop_testEvalMod0 (NVal v) = ensureMathError $ evalBasic expr
     where expr = Mod (Val v) zero_i_expr
 
 
@@ -155,8 +156,8 @@ isVNonNeg v = case v of
                     FloatVal f -> f >= 0
                     IntVal i -> i >= 0
 
-prop_testEvalPosNum :: NumberValue -> Property
-prop_testEvalPosNum (NumberValue v) = isVNonNeg v ==> evalBasic expr === Right v
+prop_testEvalPosNum :: NVal -> Property
+prop_testEvalPosNum (NVal v) = isVNonNeg v ==> evalBasic expr === Right v
     where expr = Abs (Val v)
 
 prop_testEvalAbsNegInt :: Negative Int -> Bool
@@ -210,8 +211,8 @@ prop_testOneArgFunc v = eval Empty funcs (CallUserFunc "f" [Val v]) === Right v
         funcs = insert ("f", func) Empty
 
 -- Test function thats adds its two input arguments
-prop_testTwoArgAddFunc :: NumberValue -> NumberValue -> Property
-prop_testTwoArgAddFunc (NumberValue n1) (NumberValue n2) = eval Empty funcs (CallUserFunc "f" [v1, v2]) === expected
+prop_testTwoArgAddFunc :: NVal -> NVal -> Property
+prop_testTwoArgAddFunc (NVal n1) (NVal n2) = eval Empty funcs (CallUserFunc "f" [v1, v2]) === expected
     where
         v1 = Val n1
         v2 = Val n2
@@ -222,8 +223,8 @@ prop_testTwoArgAddFunc (NumberValue n1) (NumberValue n2) = eval Empty funcs (Cal
 -- Test function that creates changes the value of a variable in its local function scope
 -- i.e
 -- f(a,b) { a = a + b; a }
-prop_setVarInFunc :: NumberValue -> NumberValue -> Property
-prop_setVarInFunc (NumberValue n1) (NumberValue n2) = eval Empty funcs (CallUserFunc "f" [v1, v2]) === expected
+prop_setVarInFunc :: NVal -> NVal -> Property
+prop_setVarInFunc (NVal n1) (NVal n2) = eval Empty funcs (CallUserFunc "f" [v1, v2]) === expected
     where
         v1 = Val n1
         v2 = Val n2
