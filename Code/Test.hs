@@ -66,12 +66,6 @@ prop_getUndefinedVar (ValidName name) = case evalBasic (Var name) of
 
 
 
-{- Test concatenation of two strings -}
-prop_evalConcat :: String -> String -> Bool
-prop_evalConcat s1 s2 = evalBasic expr == Right expected
-    where
-        expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
-        expected = StrVal (s1 ++ s2)
 
 -- More advanced expression tree tests
 

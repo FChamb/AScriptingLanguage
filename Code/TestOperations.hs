@@ -243,6 +243,12 @@ prop_setVarInFunc (NumberValue n1) (NumberValue n2) = eval Empty funcs (CallUser
         funcs = insert ("f", func) Empty
         expected = evalBasic (Add v1 v2)
 
+{- Test concatenation of two strings -}
+prop_evalConcat :: String -> String -> Bool
+prop_evalConcat s1 s2 = evalBasic expr == Right expected
+    where
+        expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
+        expected = StrVal (s1 ++ s2)
 
 return []
 runOperationTests = $quickCheckAll
