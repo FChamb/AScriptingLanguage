@@ -61,6 +61,9 @@ ensureValueError :: Show a => Either Error a -> Property
 ensureValueError (Left (ValueError _)) = property True
 ensureValueError other = counterexample ("Expected ValueError, got: " ++ show other) False
 
+checkEvalMathError :: Expr -> Property
+checkEvalMathError expr = ensureMathError $ evalBasic expr
+
 checkEvalValueError :: Expr -> Property
 checkEvalValueError expr = ensureValueError $ evalBasic expr
 
@@ -86,16 +89,18 @@ prop_testEvalMul (IntVal a) (IntVal b) = checkEval2Int Mul (*) a b
 prop_testEvalMul a b = checkEval2Float Mul (*) (numToFloat a) (numToFloat b)
 
 
+{- Division a / b -}
+-- Define zero to shorten later code
 zero_i_expr :: Expr
 zero_i_expr = Val (IntVal 0)
 zero_f_expr :: Expr
 zero_f_expr = Val (FloatVal 0.0)
-{- Division a / b -}
+
 prop_testDiv :: Value -> Value -> Property
-prop_testDiv (StrVal a) b = checkEvalValueError $ Div (Val (StrVal a)) (Val b)
-prop_testDiv a (StrVal b) = checkEvalValueError $ Div (Val a) (Val (StrVal b))
-prop_testDiv a (IntVal 0) = ensureMathError $ evalBasic (Div (Val a) zero_i_expr)
-prop_testDiv a (FloatVal 0.0) = ensureMathError $ evalBasic (Div (Val a) zero_f_expr)
+prop_testDiv (StrVal a) b     = checkEvalValueError $ Div (Val (StrVal a)) (Val b)
+prop_testDiv a (StrVal b)     = checkEvalValueError $ Div (Val a) (Val (StrVal b))
+prop_testDiv a (IntVal 0)     = checkEvalMathError  $ Div (Val a) zero_i_expr
+prop_testDiv a (FloatVal 0.0) = checkEvalMathError $ (Div (Val a) zero_f_expr)
 prop_testDiv (IntVal a) (IntVal b) = a `mod` b /= 0 ==>
                                      checkEval2Float Div (/) (fromIntegral a) (fromIntegral b)
 prop_testDiv a b = checkEval2Float Div (/) (numToFloat a) (numToFloat b)
@@ -105,15 +110,30 @@ prop_testIntDiv :: Int -> Int -> Property
 prop_testIntDiv a b = b /= 0 ==> checkEval2Int Div (div) (a*b) b
 
 {- Modulo Tests -}
-prop_testEvalMod :: Int -> Int -> Property
-prop_testEvalMod a b = b /= 0 ==> checkEval2Int Mod mod a b
+-- TODO: modulo for floats?
 
-prop_testEvalMod0 :: NVal -> Property
-prop_testEvalMod0 (NVal v) = ensureMathError $ evalBasic expr
-    where expr = Mod (Val v) zero_i_expr
+prop_testEvalMod :: Value -> Value -> Property
+prop_testEvalMod (StrVal a) b     = checkEvalValueError $ Mod (Val (StrVal a)) (Val b)
+prop_testEvalMod a (StrVal b)     = checkEvalValueError $ Mod (Val a) (Val (StrVal b))
+prop_testEvalMod a (IntVal 0)     = checkEvalMathError  $ Mod (Val a) zero_i_expr
+-- prop_testEvalMod a (FloatVal 0.0) = checkEvalMathError $ (Div (Val a) zero_f_expr)
+prop_testEvalMod (IntVal a) (IntVal b) = checkEval2Int Mod mod a b
+prop_testEvalMod a b = checkEvalValueError $ Mod (Val a) (Val b)
 
+{- Power AKA a^n tests -}
+prop_testPow :: Value -> Value -> Property
+prop_testPow (StrVal a) n     = checkEvalValueError $ Mod (Val (StrVal a)) (Val n)
+prop_testPow a (StrVal n)     = checkEvalValueError $ Mod (Val a) (Val (StrVal n))
+prop_testPow (IntVal a) (IntVal n) | a == 0 && n < 0  = checkEvalMathError $ Pow (Val (IntVal a)) (Val (IntVal n)) -- Divide by zero
+                                   | n < 0            = checkEval2Float Pow (**) (fromIntegral a) (fromIntegral n) -- Fraction
+                                   | otherwise        = checkEval2Int Pow (^) a n
+prop_testPow a (IntVal n) = checkEval2Float Pow (**) (numToFloat a) (fromIntegral n)
+prop_testPow aV nV | a <= 0.0  = checkEvalMathError $ Pow (Val aV) (Val nV) -- Divide by zero OR sqrt-like negative
+                   | otherwise = checkEval2Float Pow (**) a n
+    where
+        a = numToFloat aV
+        n = numToFloat nV
 
-{- Power AKA a^x tests -}
 prop_testEvalPowIntNon0 :: Int -> Int -> Property
 prop_testEvalPowIntNon0 a x = a /= 0 ==> checkEval2Int Pow (^) a x
 
