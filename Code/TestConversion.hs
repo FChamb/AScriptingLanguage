@@ -7,6 +7,7 @@ import Data.Maybe
 import Test.QuickCheck
 
 import Expr
+import Error
 import Test
 
 -- Type conversion

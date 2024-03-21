@@ -1,7 +1,7 @@
 module Expr where
 
 import BinaryTree
-import Control.Monad.State
+--import Control.Monad.State
 
 type Name = String
 
@@ -67,11 +67,3 @@ data Command = Set Name Expr             -- assign an expression to a variable n
              | Help                      -- Prompt for showing helpful options
   deriving Show
 
--- Error data type
-data Error = ParseError String | MathError String | ValueError String
-    deriving (Eq)
-
-instance Show Error where
-    show (ParseError i) = "ParseError: " ++ i
-    show (MathError f) =  "MathError: " ++ f
-    show (ValueError s) = "ValueError: " ++ s

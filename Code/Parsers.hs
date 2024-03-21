@@ -4,6 +4,7 @@ import Data.List (nub)
 
 import Parsing
 import Expr
+import Error
 
 {-
  - Context Free Grammar:

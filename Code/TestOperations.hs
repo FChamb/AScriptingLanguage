@@ -4,6 +4,7 @@ module TestOperations where
 import Test.QuickCheck
 
 import Expr
+import Error
 import Eval
 import BinaryTree
 

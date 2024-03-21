@@ -5,6 +5,7 @@ import Data.Maybe
 import Data.Fixed (divMod') 
 
 import Expr
+import Error
 import BinaryTree
 
 eval :: Vars -> -- Variable name to value mapping
