@@ -21,11 +21,16 @@ import Parsers
 import Eval
 import BinaryTree
 import Error
+import Completion
 
 initState :: Env
 initState = Env Empty Empty []
 
-type REPL a = StateT Env (ExceptT Error (InputT IO)) a
+--type REPL a = StateT Env (ExceptT Error (InputT IO)) a
+type REPL a = ExceptT Error (InputT (StateT Env IO)) a
+
+liftState = lift . lift
+liftInput = lift
 
 {-process :: LState -> Command -> IO ()
 process st (Set var e) = do let st' = case (eval e) of
@@ -38,23 +43,23 @@ process st (Set var e) = do let st' = case (eval e) of
 
 process :: Command -> REPL ()
 process (Set var e) = do
-    st <- get
+    st <- liftState $ get
     let evaled = eval (vars st) (funcs st) e
     case evaled of
-        Right x -> modify (\s -> s { vars = insert (var, x) (vars s) })
+        Right x -> liftState $ modify (\s -> s { vars = insert (var, x) (vars s) })
         Left e -> liftIO $ putStrLn (show e)
 
 process (InputSet var) = do
-    input <- lift $ lift $ getInputLine ""
+    input <- liftInput $ getInputLine ""
     case input of
         Nothing -> liftIO $ putStrLn "EOF, cancelling input"
-        Just inp -> do st <- get
+        Just inp -> do st <- liftState $ get
                        let newVars = insert (var, StrVal inp) (vars st)
-                       modify (\s -> s { vars = newVars })
+                       liftState $ modify (\s -> s { vars = newVars })
 
 
 process (Print e) = do
-    st <- get
+    st <- liftState $ get
     case eval (vars st) (funcs st) e of
         Right evaled -> liftIO $ putStrLn (show evaled)
         Left e -> liftIO $ putStrLn (show e)
@@ -64,21 +69,21 @@ process (LoadFile f) = do
     liftIO $ loadFile f
 
 process (Repeat n cmds) = do
-    st <- get
+    st <- liftState $ get
     forM_ [1..n] (\_ -> forM_ cmds (\c -> process c))
-    put st
+    liftState $ put st
 
 process (Block cmds) = do
-    st <- get
+    st <- liftState $ get
     forM_ cmds (\c -> process c)
-    put st
+    liftState $ put st
 
 process (DefUserFunc name func) = do
-    modify (\s -> s { funcs = insert (name, func) (funcs s) })
+    liftState $ modify (\s -> s { funcs = insert (name, func) (funcs s) })
 
 
 process (If condition thenBlock elseBlock) = do
-    st <- get
+    st <- liftState $ get
     case eval (vars st) (funcs st) condition of
         Right (IntVal val) -> if val /= 0
                               then process (Block [thenBlock])
@@ -110,7 +115,7 @@ process (Quit) = do liftIO $ putStrLn ("Closing")
 loadFile :: Name -> IO ()
 loadFile file = do
     result <- tryJust (guard . isDoesNotExistError) $
-              runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (repl False) initState))
+              evalStateT (runInputTBehavior (useFile file) defaultSettings (runExceptT (repl False))) initState
     case result of
         Left err -> putStrLn "Error: File not found"
         Right (Left err) -> do putStrLn $ "Error: " ++ (show err)
@@ -133,8 +138,8 @@ repeatCmd cmd = [cmd]
 repl :: Bool -> REPL ()
 repl continue = do
     input <- case continue of
-        True -> lift $ lift $ getInputLine "> "
-        False -> lift $ lift $ getInputLine ""
+        True -> liftInput $ getInputLine "> "
+        False -> liftInput $ getInputLine ""
     case input of
         Nothing -> case continue of
             True -> liftIO $ putStrLn "EOF, goodbye"
@@ -150,7 +155,7 @@ repl continue = do
 
 runREPL :: Env -> IO ()
 runREPL initState = do
-    result <- runInputT defaultSettings (runExceptT (evalStateT (repl True) initState))
+    result <- evalStateT (runInputT hlSettings (runExceptT (repl True))) initState
     case result of
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> return ()
