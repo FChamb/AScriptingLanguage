@@ -59,7 +59,6 @@ data Expr = Add Expr Expr
           | CallUserFunc Name [Expr] -- User defined function, with variable number of arguments
           | Val Value
           | Var Name
-          | If Expr Expr
   deriving (Show, Eq)
 
 -- These are the REPL commands
@@ -70,7 +69,7 @@ data Command = Set Name Expr             -- assign an expression to a variable n
              | Repeat Int Command        -- Prompt for repeating a command
              | Block [Command]           -- Representing a block command
              | DefUserFunc Name UserFunc -- Define a function
+             | If Expr Command Command   -- Define if then else
              | Quit                      -- Prompt for quiting program
              | Help                      -- Prompt for showing helpful options
   deriving Show
-

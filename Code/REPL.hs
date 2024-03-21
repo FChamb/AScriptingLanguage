@@ -63,15 +63,6 @@ process (LoadFile f) continue = do
     liftIO $ putStrLn $ "Loading File..."
     liftIO $ loadFile f
 
-{-
-contents <- liftIO $ readFile f
-    let commands = lines contents
-        parsedCommands = map (parse pCommand) commands
-        eitherCommands = concatMap (map fst) parsedCommands
-    mapM_ process (rights eitherCommands)
-    repl False
--}
-
 process (Repeat n cmd) continue = do
     st <- get
     forM_ (repeatCmds cmd) (\c -> process c continue)
@@ -89,6 +80,15 @@ process (Block cmds) continue = do
 process (DefUserFunc name func) continue = do
     modify (\s -> s { funcs = insert (name, func) (funcs s) })
     repl True
+
+process (If condition thenBlock elseBlock) continue = do
+    st <- get
+    case eval (vars st) (funcs st) condition of
+        Right (IntVal val) -> if val /= 0
+                              then process (Block [thenBlock]) continue
+                              else process (Block [elseBlock]) continue
+        Left e -> liftIO $ putStrLn (show e)
+    repl continue
 
 process (Help) continue = do
     liftIO $ putStrLn ("List of program operations: ")

@@ -10,12 +10,13 @@ import Error
 {-
  - Context Free Grammar:
  -
- - COMMAND -> VAR = EXPR | VAR = input | print EXPR | def FUNCTION
+ - COMMAND -> VAR = EXPR | VAR = input | print EXPR | def FUNCTION | if EXPR { Block }
  -
  - EXPR -> FACTOR
  -        | TERM + EXPR
  -        | TERM - EXPR
  -        | TERM ++ EXPR
+ -        | if EXPR then EXPR else EXPR
  -
  -
  - TERM -> VAR | VAL | toString(EXPR) | toInt(EXPR) | abs(EXPR) | pow(EXPR,EXPR) | (EXPR)
@@ -49,6 +50,23 @@ pCommand = do t <- identifier
                   space
                   block <- pBlock
                   return (Right (Repeat i block))
+           ||| do string "if"
+                  space
+                  condition <- pExpr
+                  space
+                  string "then"
+                  space
+                  thenBlock <- pCommand
+                  space
+                  string "else"
+                  space
+                  elseBlock <- pCommand
+                  case thenBlock of
+                      Right thenCmd ->
+                          case elseBlock of
+                              Right elseCmd -> return (Right (If condition thenCmd elseCmd))
+                              Left err -> return (Left err)
+                      Left err -> return (Left err)
            ||| do string ":f"
                   f <- fileName
                   return (Right (LoadFile f))
