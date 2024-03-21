@@ -104,7 +104,7 @@ process (Quit) = do liftIO $ putStrLn ("Closing")
 
 loadFile :: Name -> IO ()
 loadFile file = do
-    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT repl initState))
+    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (repl False) initState))
     case result of
         Left err -> putStrLn $ "Error: " ++ (show err)
         Right newState -> return ()
@@ -132,28 +132,6 @@ runREPL initState = do
 -- 'process' to process the command.
 -- 'process' will call 'repl' when done, so the system loops.
 
-repl :: REPL ()
-repl = do
-    input <- lift $ lift $ getInputLine "> "
-    case input of
-        Nothing -> liftIO $ putStrLn "EOF, goodbye"
-        Just line -> do
-            let parsed = parse pCommand line
-            case parsed of
-                [(Right cmd, "")] -> process cmd
-                [(Left err, _)] -> liftIO $ putStrLn (show err)
-                [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
-                _ -> liftIO $ putStrLn ("Error: Invalid input")
-            repl
-
-runREPL :: Env -> IO ()
-runREPL initState = do
-    result <- runInputT defaultSettings (runExceptT (evalStateT repl initState))
-    case result of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right _ -> return ()
-
-{-
 repl :: Bool -> REPL ()
 repl continue = do
     input <- case continue of
@@ -166,9 +144,15 @@ repl continue = do
         Just line -> do
             let parsed = parse pCommand line
             case parsed of
-                [(Right cmd, "")] -> process cmd continue
+                [(Right cmd, "")] -> process cmd
                 [(Left err, _)] -> liftIO $ putStrLn (show err)
                 [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
                 _ -> liftIO $ putStrLn ("Error: Invalid input")
             repl continue
--}
+
+runREPL :: Env -> IO ()
+runREPL initState = do
+    result <- runInputT defaultSettings (runExceptT (evalStateT (repl True) initState))
+    case result of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> return ()
