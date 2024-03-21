@@ -49,7 +49,7 @@ pCommand = do t <- identifier
                   i <- integer
                   space
                   block <- pBlock
-                  return (Right (Repeat i block))
+                  return (Right (Repeat i [block]))
            ||| do string "if"
                   space
                   condition <- pExpr

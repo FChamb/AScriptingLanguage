@@ -66,7 +66,7 @@ data Command = Set Name Expr             -- assign an expression to a variable n
              | Print Expr                -- evaluate an expression and print the result
              | InputSet Name             -- Prompt for input and store into variable
              | LoadFile FilePath         -- Prompt for loading a file to run
-             | Repeat Int Command        -- Prompt for repeating a command
+             | Repeat Int [Command]      -- Prompt for repeating a command
              | Block [Command]           -- Representing a block command
              | DefUserFunc Name UserFunc -- Define a function
              | If Expr Command Command   -- Define if then else
