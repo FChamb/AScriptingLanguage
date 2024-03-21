@@ -87,8 +87,11 @@ eval vars fs (Pow x y) = do
     base <- eval vars fs x
     exp <- eval vars fs y
     case (base, exp) of
-        (IntVal intA, IntVal intB) -> Right (IntVal (intA ^ intB))
-        -- case for negative exponent w integers
+        (IntVal 0, _) -> Right (IntVal 0)
+        (FloatVal 0.0, _) -> Right (FloatVal 0.0)
+        (IntVal intA, IntVal intB) | intA == 0 && intB < 0 -> Left $ MathError "division by 0 is undefined"
+                                   | intB < 0              -> Right $ FloatVal ((fromIntegral intA) ** (fromIntegral intB)) -- negative exponent == float
+                                   | otherwise             -> Right (IntVal (intA ^ intB))
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA ** fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int ** flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt ** fromIntegral int))
