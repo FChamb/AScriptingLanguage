@@ -25,7 +25,7 @@ eval vars fs (Add x y) = do
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA + fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int + flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt + fromIntegral int))
-        _ -> Left $ MathError "flawed addition operation"
+        _ -> Left $ ValueError "flawed addition operation"
 
 eval vars fs (Sub x y) = do
     xVal <- eval vars fs x
@@ -35,7 +35,7 @@ eval vars fs (Sub x y) = do
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA - fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int - flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt - fromIntegral int))
-        _ -> Left $ MathError "flawed subtraction operation"
+        _ -> Left $ ValueError "flawed subtraction operation"
 
 eval vars fs (Mul x y) = do
     xVal <- eval vars fs x
@@ -45,21 +45,21 @@ eval vars fs (Mul x y) = do
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA * fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int * flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt * fromIntegral int))
-        _ ->  Left $ MathError "flawed multiplication operation"
+        _ ->  Left $ ValueError "flawed multiplication operation"
 
 eval vars fs (Div x y) = do
     xVal <- eval vars fs x
     yVal <- eval vars fs y
     case (xVal, yVal) of
-        (_, IntVal 0) -> Left $ ValueError "program does not support imaginary numbers"
-        (_, FloatVal 0.0) -> Left $ ValueError "program does not support imaginary numbers"
+        (_, IntVal 0) -> Left $ MathError "program does not support imaginary numbers"
+        (_, FloatVal 0.0) -> Left $ MathError "program does not support imaginary numbers"
         (IntVal intA, IntVal intB) -> if (intA `mod` intB == 0)
                                             then Right (IntVal (intA `div` intB))
                                             else Right (FloatVal (fromIntegral intA / fromIntegral intB))
         (FloatVal fltA, FloatVal fltB) -> Right (FloatVal (fltA / fltB))
         (IntVal int, FloatVal flt) -> Right (FloatVal (fromIntegral int / flt))
         (FloatVal flt, IntVal int) -> Right (FloatVal (flt / fromIntegral int))
-        _ -> Left $ MathError "flawed division operation"
+        _ -> Left $ ValueError "flawed division operation"
 
 eval vars fs (Concat a b) = case (eval vars fs a, eval vars fs b) of
                                 (Right (StrVal x), Right (StrVal y)) -> Right ((StrVal (x ++ y)))
@@ -70,7 +70,7 @@ eval vars fs (Abs a) = do
     case val of
         IntVal int -> Right (IntVal (abs int))
         FloatVal flt -> Right (FloatVal (abs flt))
-        _ -> Left $ MathError "flawed absolute value operation"
+        _ -> Left $ ValueError "flawed absolute value operation"
 
 eval vars fs (Mod x y) = do
     dividend <- eval vars fs x
@@ -82,7 +82,7 @@ eval vars fs (Mod x y) = do
         (FloatVal fltA, FloatVal fltB) -> return (FloatVal (snd (divMod' fltA fltB)))
         (IntVal int, FloatVal flt) -> return (FloatVal (snd (divMod' (fromIntegral int) flt)))
         (FloatVal flt, IntVal int) -> return (FloatVal (snd (divMod' flt (fromIntegral int))))
-        _ -> Left $ MathError "flawed modulo operation"
+        _ -> Left $ ValueError "flawed modulo operation"
 
 eval vars fs (Pow x y) = do
     base <- eval vars fs x
