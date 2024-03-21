@@ -1,7 +1,10 @@
 module REPL where
 
 import System.Console.Haskeline
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.State
+import Control.Monad.Trans.Except
 import System.Directory
 
 import Expr
@@ -10,9 +13,10 @@ import Parsers
 import Eval
 import BinaryTree
 
-initState :: State
-initState = State Empty [] []
+initState :: Env
+initState = Env Empty Empty []
 
+type REPL a = StateT Env (ExceptT Error (InputT IO)) a
 
 {-process :: LState -> Command -> IO ()
 process st (Set var e) = do let st' = case (eval e) of
@@ -23,87 +27,109 @@ process st (Set var e) = do let st' = case (eval e) of
                             repl st'
 -}
 
-process :: State -> Command -> InputT IO ()
-process st (Set var e) = do
+process :: Command -> REPL ()
+process (Set var e) = do
+    st <- get
     let evaled = eval (vars st) (funcs st) e
     case evaled of
-        Right x -> repl $ st{vars = insert (var, x) (vars st)}
-        Left e -> do outputStrLn (show e)
-                     repl st
+        Right x -> modify (\s -> s { vars = insert (var, x) (vars s) })
+        Left e -> liftIO $ putStrLn (show e)
+    repl
 
-process st (InputSet var) = do
-    input <- getInputLine ""
+process (InputSet var) = do
+    input <- lift $ lift $ getInputLine ""
     case input of
-        Nothing -> do outputStrLn "EOF, cancelling input"
-                      repl st
-        Just inp -> do let newVars = insert (var, StrVal inp) (vars st)
-                       let st' = st { vars = newVars }
-                       repl st'
+        Nothing -> liftIO $ putStrLn "EOF, cancelling input"
+        Just inp -> do st <- get
+                       let newVars = insert (var, StrVal inp) (vars st)
+                       modify (\s -> s { vars = newVars })
+    repl
 
-process st (Print e) = do
+process (Print e) = do
+    st <- get
     case eval (vars st) (funcs st) e of
-        Right evaled -> outputStrLn (show evaled)
-        Left e -> outputStrLn (show e) 
-    repl st
+        Right evaled -> liftIO $ putStrLn (show evaled)
+        Left e -> liftIO $ putStrLn (show e)
+    repl
 
-process st (File f) = do
-    x <- liftIO(doesFileExist f)
-    if x then do outputStrLn "Loading File..."
-                 liftIO(loadFile f st)
-    else do outputStrLn ("\"" ++ f ++ "\"" ++ "does not exist!")
-            repl st
+{-
+process (File f) = do
+    x <- liftIO (doesFileExist f)
+    if x then do liftIO $ putStrLn "Loading File..."
+                 liftIO $ loadFile f
+    else liftIO $ putStrLn ("\"" ++ f ++ "\"" ++ " does not exist!")
+    repl
+-}
 
-process st (Repeat n cmd) = repeatCommand st n cmd
+process (Repeat n cmd) = repeatCommand n cmd
 
-process st (DefUserFunc name func) = do
-    let st' = st { funcs = (insert name func (funcs st))}
-    repl st'
+process (DefUserFunc name func) = do
+    modify (\s -> s { funcs = insert (name, func) (funcs s) })
+    repl
 
-process st (Help) = do
-    outputStrLn("List of program operations: ")
-    outputStrLn("  - a + b {Addition}")
-    outputStrLn("  - a - b {Subtraction}")
-    outputStrLn("  - a * b {Multiplication}")
-    outputStrLn("  - a / b {Division}")
-    outputStrLn("  - |a| {Absolute Value}")
-    outputStrLn("  - a % b {Modulus}")
-    outputStrLn("  - a ^ b {Power}")
-    outputStrLn("  - sqrt a {Square Root}")
-    outputStrLn("  - a = 1 {Assign variables}")
-    outputStrLn("Lost of program commands: ")
-    outputStrLn("  - print ... {Print the Command}")
-    outputStrLn("  - quit {Quit the Program}")
-    outputStrLn("  - :f fileName {Load a File}")
-    outputStrLn("  - :h {Show Program Commands")
-    repl st
+process (Help) = do
+    liftIO $ putStrLn ("List of program operations: ")
+    liftIO $ putStrLn ("  - a + b {Addition}")
+    liftIO $ putStrLn ("  - a - b {Subtraction}")
+    liftIO $ putStrLn ("  - a * b {Multiplication}")
+    liftIO $ putStrLn ("  - a / b {Division}")
+    liftIO $ putStrLn ("  - |a| {Absolute Value}")
+    liftIO $ putStrLn ("  - a % b {Modulus}")
+    liftIO $ putStrLn ("  - a ^ b {Power}")
+    liftIO $ putStrLn ("  - sqrt a {Square Root}")
+    liftIO $ putStrLn ("  - a = 1 {Assign variables}")
+    liftIO $ putStrLn ("List of program commands: ")
+    liftIO $ putStrLn ("  - print ... {Print the Command}")
+    liftIO $ putStrLn ("  - quit {Quit the Program}")
+    liftIO $ putStrLn ("  - :f fileName {Load a File}")
+    liftIO $ putStrLn ("  - :h {Show Program Commands")
+    repl
 
-process st (Quit) = outputStrLn("Closing")
+process (Quit) = liftIO $ putStrLn ("Closing")
 
-loadFile :: Name -> State -> IO ()
-loadFile file st = runInputTBehavior (useFile file) defaultSettings (repl st)
+{-
+loadFile :: Name -> IO ()
+loadFile file = do
+    let replIO :: REPL ()
+        replIO = repl
+    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (runStateT (lift replIO) initState))
+    case result of
+        Left err -> putStrLn $ "Error: " ++ (show err)
+        Right (_, newState) -> return ()
+-}
 
-remember :: State -> Command -> State
-remember state command = State {vars = vars state, history = (history state ++ [command])}
+remember :: Command -> StateT Env (ExceptT Error IO) ()
+remember cmd = do
+    st <- get
+    put $ st { history = cmd : history st }
 
-repeatCommand :: State -> Int -> Command -> InputT IO ()
-repeatCommand st n cmd
-    | n <= 0 = repl st
-    | otherwise = do process st cmd
-                     repeatCommand st (n - 1) cmd
+repeatCommand :: Int -> Command -> REPL ()
+repeatCommand n cmd
+    | n <= 0 = repl
+    | otherwise = do process cmd
+                     repeatCommand (n - 1) cmd
+
+runREPL :: Env -> IO ()
+runREPL initState = do
+    result <- runInputT defaultSettings (runExceptT (evalStateT repl initState))
+    case result of
+        Left err -> putStrLn $ "Error: " ++ show err
+        Right _ -> return ()
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls
 -- 'process' to process the command.
 -- 'process' will call 'repl' when done, so the system loops.
 
-repl :: State -> InputT IO ()
-repl st = do outputStrLn (show (vars st))
-             inp <- getInputLine "> "
-             let parsed = fmap (parse pCommand) inp
-             case parsed of
-                Nothing -> outputStrLn "EOF, goodbye"
-                Just [(Left e,_)] -> do outputStrLn (show e)
-                                        repl st
-                Just [(Right cmd, "")] -> process st cmd -- successful if entire equation is consumed
-                Just [(Right cmd, a)] -> do outputStrLn $ "flaw at or after `" ++ a ++ "`\n\tIn operation: " ++ show inp
-                                            repl st
+repl :: REPL ()
+repl = do input <- lift $ lift $ getInputLine "> "
+          case input of
+              Nothing -> liftIO $ putStrLn "EOF, goodbye"
+              Just line -> do
+                  let parsed = parse pCommand line
+                  case parsed of
+                      [(Right cmd, "")] -> process cmd
+                      [(Left err, _)] -> liftIO $ putStrLn (show err)
+                      [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
+                      _ -> liftIO $ putStrLn ("Error: Invalid input")
+                  repl

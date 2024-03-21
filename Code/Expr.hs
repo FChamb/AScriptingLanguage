@@ -28,13 +28,18 @@ data FuncStatement = FuncSetVar Name Expr -- TODO: support some kind of if too?
     deriving (Show)
 type Funcs = Tree (Name, UserFunc)
 
-data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}
+data Env = Env {vars :: Vars, funcs :: Funcs, history :: [Command]}
+type Eval a = StateT Env (Either Error) a
+--data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}
 
 -- Given a variable name and a value, return a new set of variables with
 -- that name and value added.
 -- If it already exists, remove the old value
-updateVars :: Name -> Value -> State -> State
-updateVars name val st = st {vars = insert (name, val) (vars st)}
+updateVars :: Name -> Value -> Eval ()
+updateVars name val = do
+    env <- get
+    let newVars = insert (name, val) (vars env)
+    put $ env { vars = newVars }
 
 {- An Expression is a tree-like data type that can be evaluated to a Value,
  - without any IO. It only consists of mathematical statements -}
