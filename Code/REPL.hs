@@ -96,11 +96,13 @@ process (Help) = do
     liftIO $ putStrLn ("  - a ^ b {Power}")
     liftIO $ putStrLn ("  - sqrt a {Square Root}")
     liftIO $ putStrLn ("  - a = 1 {Assign variables}")
+    liftIO $ putStrLn ("  - If x then y else z {If then else conditionals")
     liftIO $ putStrLn ("List of program commands: ")
     liftIO $ putStrLn ("  - print ... {Print the Command}")
+    liftIO $ putStrLn ("  - repeat n {} {Repeat an operation, n times")
     liftIO $ putStrLn ("  - quit {Quit the Program}")
-    liftIO $ putStrLn ("  - :f fileName {Load a File}")
-    liftIO $ putStrLn ("  - :h {Show Program Commands")
+    liftIO $ putStrLn ("  - :load fileName {Load a File}")
+    liftIO $ putStrLn ("  - :help {Show Program Commands")
 
 process (Quit) = do liftIO $ putStrLn ("Closing")
                     liftIO exitSuccess

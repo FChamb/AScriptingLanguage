@@ -67,10 +67,10 @@ pCommand = do t <- identifier
                               Right elseCmd -> return (Right (If condition thenCmd elseCmd))
                               Left err -> return (Left err)
                       Left err -> return (Left err)
-           ||| do string ":f"
+           ||| do string ":load"
                   f <- fileName
                   return (Right (LoadFile f))
-           ||| do string ":h"
+           ||| do string ":help"
                   return (Right Help)
            ||| return (Left (ParseError "Invalid command"))
 
