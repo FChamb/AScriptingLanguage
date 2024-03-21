@@ -8,9 +8,12 @@ import Control.Monad.Trans.Except
 import Control.Monad (replicateM_)
 import Control.Monad (forM_)
 import Control.Monad (when)
+import Control.Monad (guard)
 import System.Directory
 import System.Exit (exitSuccess)
 import Data.Either (rights)
+import System.IO.Error
+import Control.Exception
 
 import Expr
 import Parsing
@@ -104,10 +107,12 @@ process (Quit) = do liftIO $ putStrLn ("Closing")
 
 loadFile :: Name -> IO ()
 loadFile file = do
-    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (repl False) initState))
+    result <- tryJust (guard . isDoesNotExistError) $
+              runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (repl False) initState))
     case result of
-        Left err -> putStrLn $ "Error: " ++ (show err)
-        Right newState -> return ()
+        Left err -> putStrLn "Error: File not found"
+        Right (Left err) -> do putStrLn $ "Error: " ++ (show err)
+        Right (Right newState) -> return ()
 
 remember :: Command -> StateT Env (ExceptT Error IO) ()
 remember cmd = do
@@ -117,15 +122,6 @@ remember cmd = do
 repeatCmds :: Command -> [Command]
 repeatCmds (Block cmds) = concatMap repeatCmds cmds
 repeatCmd cmd = [cmd]
-
-{-
-runREPL :: Env -> IO ()
-runREPL initState = do
-    result <- runInputT defaultSettings (runExceptT (evalStateT (repl True) initState))
-    case result of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right _ -> return ()
--}
 
 -- Read, Eval, Print Loop
 -- This reads and parses the input using the pCommand parser, and calls
