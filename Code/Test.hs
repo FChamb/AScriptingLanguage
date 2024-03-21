@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Data.List
 
 import Expr
+import Error
 import Eval
 import BinaryTree
 

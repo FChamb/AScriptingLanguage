@@ -1,5 +1,7 @@
 module BinaryTree where
 
+import Error
+
 data Tree a = Empty | Tree a (Tree a) (Tree a)
     deriving (Show, Eq)
 
@@ -10,8 +12,8 @@ insert (n, v) (Tree node l r) = case compare n (fst node) of
     LT -> Tree node (insert (n, v) l) r
     GT -> Tree node l (insert (n, v) r)
 
-value :: Ord n => n -> Tree (n, v) -> Either String v
-value n Empty = Left "Value not found"
+value :: Ord n => n -> Tree (n, v) -> Either Error v
+value n Empty = Left $ ValueError "value not found"
 value n (Tree node l r) = case compare n (fst node) of
     EQ -> Right (snd node)
     LT -> value n l

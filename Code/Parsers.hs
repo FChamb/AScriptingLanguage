@@ -4,6 +4,7 @@ import Data.List (nub)
 
 import Parsing
 import Expr
+import Error
 
 {-
  - Context Free Grammar:
@@ -52,7 +53,7 @@ pCommand = do t <- identifier
                   return (Right (File f))
            ||| do string ":h"
                   return (Right Help)
-           ||| return (Left (ParseError "ParseError: Invalid command"))
+           ||| return (Left (ParseError "Invalid command"))
 
 pBlock :: Parser Command
 pBlock = do
@@ -77,7 +78,7 @@ pFunc = do symbol "def" -- Define a function
            symbol "}"
            if nub args == args
               then return $ Right (DefUserFunc fName (UserFunc args stmts retExpr))
-              else return (Left (ParseError "ParseError: Argument names must be unique"))
+              else return (Left (ParseError "Argument names must be unique"))
 
 pFuncStatement :: Parser FuncStatement
 pFuncStatement = do
@@ -120,24 +121,24 @@ pTerm :: Parser Expr
 pTerm = do v <- pValue
            return (Val v)
            ||| do symbol "toString"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToString e)
            ||| do symbol "toInt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToString e)
            ||| do symbol "toInt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToInt e)
            ||| do symbol "abs"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (Abs e)
            ||| do symbol "pow"
                   symbol "("
@@ -147,9 +148,9 @@ pTerm = do v <- pValue
                   symbol ")"
                   return (Pow t u)
            ||| do symbol "sqrt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (Sqrt e)
            ||| do n <- identifier
                   symbol "("
