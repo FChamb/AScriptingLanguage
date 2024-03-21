@@ -1,7 +1,7 @@
 module Expr where
 
 import BinaryTree
---import Control.Monad.State
+import Control.Monad.State
 
 type Name = String
 
