@@ -104,9 +104,7 @@ process (Quit) = do liftIO $ putStrLn ("Closing")
 
 loadFile :: Name -> IO ()
 loadFile file = do
-    let replIO :: REPL ()
-        replIO = repl
-    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (replIO) initState))
+    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT repl initState))
     case result of
         Left err -> putStrLn $ "Error: " ++ (show err)
         Right newState -> return ()
@@ -117,7 +115,7 @@ remember cmd = do
     put $ st { history = cmd : history st }
 
 repeatCmds :: Command -> [Command]
-repeatCmds (Block cmds) = cmds
+repeatCmds (Block cmds) = concatMap repeatCmds cmds
 repeatCmd cmd = [cmd]
 
 {-
@@ -154,14 +152,6 @@ runREPL initState = do
     case result of
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> return ()
-
-handleRepetitions :: Int -> [Command] -> REPL ()
-handleRepetitions n cmds = do
-    forM_ [1..n] $ \_ -> do
-        forM_ cmds $ \cmd -> do
-            process cmd
-        liftIO $ putStrLn ""
-    repl
 
 {-
 repl :: Bool -> REPL ()
