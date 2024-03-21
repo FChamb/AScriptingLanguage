@@ -102,7 +102,8 @@ eval vars fs (Sqrt a) = do
     case val of
         IntVal int | int < 0 -> Left $ MathError "negatives not supported for this operation"
                    | otherwise -> Right (FloatVal (sqrt $ fromIntegral int))
-        FloatVal flt -> Right (FloatVal (sqrt flt))
+        FloatVal flt | flt < 0.0 ->  Left $ MathError "negatives not supported for this operation"
+                     | otherwise -> Right (FloatVal (sqrt flt))
         _ -> Left $ MathError "flawed square root operation"
 
 eval vars fs (ToString e) = do
