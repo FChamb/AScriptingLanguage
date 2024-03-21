@@ -120,24 +120,24 @@ pTerm :: Parser Expr
 pTerm = do v <- pValue
            return (Val v)
            ||| do symbol "toString"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToString e)
            ||| do symbol "toInt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToString e)
            ||| do symbol "toInt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (ToInt e)
            ||| do symbol "abs"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (Abs e)
            ||| do symbol "pow"
                   symbol "("
@@ -147,9 +147,9 @@ pTerm = do v <- pValue
                   symbol ")"
                   return (Pow t u)
            ||| do symbol "sqrt"
-                  string "("
+                  symbol "("
                   e <- pExpr
-                  string ")"
+                  symbol ")"
                   return (Sqrt e)
            ||| do n <- identifier
                   symbol "("
