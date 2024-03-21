@@ -5,13 +5,18 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Except
+import Control.Monad (replicateM_)
+import Control.Monad (when)
 import System.Directory
+import System.Exit (exitSuccess)
+import Data.Either (rights)
 
 import Expr
 import Parsing
 import Parsers
 import Eval
 import BinaryTree
+import Error
 
 initState :: Env
 initState = Env Empty Empty []
@@ -34,7 +39,7 @@ process (Set var e) = do
     case evaled of
         Right x -> modify (\s -> s { vars = insert (var, x) (vars s) })
         Left e -> liftIO $ putStrLn (show e)
-    repl
+    repl True
 
 process (InputSet var) = do
     input <- lift $ lift $ getInputLine ""
@@ -43,29 +48,44 @@ process (InputSet var) = do
         Just inp -> do st <- get
                        let newVars = insert (var, StrVal inp) (vars st)
                        modify (\s -> s { vars = newVars })
-    repl
+    repl True
 
 process (Print e) = do
     st <- get
     case eval (vars st) (funcs st) e of
         Right evaled -> liftIO $ putStrLn (show evaled)
         Left e -> liftIO $ putStrLn (show e)
-    repl
+    repl True
+
+
+process (LoadFile f) = do
+    liftIO $ putStrLn $ "Loading File..."
+    liftIO $ loadFile f
 
 {-
-process (File f) = do
-    x <- liftIO (doesFileExist f)
-    if x then do liftIO $ putStrLn "Loading File..."
-                 liftIO $ loadFile f
-    else liftIO $ putStrLn ("\"" ++ f ++ "\"" ++ " does not exist!")
-    repl
+contents <- liftIO $ readFile f
+    let commands = lines contents
+        parsedCommands = map (parse pCommand) commands
+        eitherCommands = concatMap (map fst) parsedCommands
+    mapM_ process (rights eitherCommands)
+    repl False
 -}
 
-process (Repeat n cmd) = repeatCommand n cmd
+process (Repeat n cmd) = do
+    st <- get
+    replicateM_ n (sequence_ (map process (repeatCmds cmd)))
+    put st
+    repl True
+
+process (Block cmds) = do
+    st <- get
+    replicateM_ (length cmds) (sequence_ (map process cmds))
+    put st
+    repl True
 
 process (DefUserFunc name func) = do
     modify (\s -> s { funcs = insert (name, func) (funcs s) })
-    repl
+    repl True
 
 process (Help) = do
     liftIO $ putStrLn ("List of program operations: ")
@@ -83,35 +103,33 @@ process (Help) = do
     liftIO $ putStrLn ("  - quit {Quit the Program}")
     liftIO $ putStrLn ("  - :f fileName {Load a File}")
     liftIO $ putStrLn ("  - :h {Show Program Commands")
-    repl
+    repl True
 
-process (Quit) = liftIO $ putStrLn ("Closing")
+process (Quit) = do liftIO $ putStrLn ("Closing")
+                    liftIO exitSuccess
 
-{-
+
 loadFile :: Name -> IO ()
 loadFile file = do
     let replIO :: REPL ()
-        replIO = repl
-    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (runStateT (lift replIO) initState))
+        replIO = repl False
+    result <- runInputTBehavior (useFile file) defaultSettings (runExceptT (evalStateT (replIO) initState))
     case result of
         Left err -> putStrLn $ "Error: " ++ (show err)
-        Right (_, newState) -> return ()
--}
+        Right newState -> return ()
 
 remember :: Command -> StateT Env (ExceptT Error IO) ()
 remember cmd = do
     st <- get
     put $ st { history = cmd : history st }
 
-repeatCommand :: Int -> Command -> REPL ()
-repeatCommand n cmd
-    | n <= 0 = repl
-    | otherwise = do process cmd
-                     repeatCommand (n - 1) cmd
+repeatCmds :: Command -> [Command]
+repeatCmds (Block cmds) = cmds
+repeatCmd cmd = [cmd]
 
 runREPL :: Env -> IO ()
 runREPL initState = do
-    result <- runInputT defaultSettings (runExceptT (evalStateT repl initState))
+    result <- runInputT defaultSettings (runExceptT (evalStateT (repl True) initState))
     case result of
         Left err -> putStrLn $ "Error: " ++ show err
         Right _ -> return ()
@@ -121,15 +139,17 @@ runREPL initState = do
 -- 'process' to process the command.
 -- 'process' will call 'repl' when done, so the system loops.
 
-repl :: REPL ()
-repl = do input <- lift $ lift $ getInputLine "> "
-          case input of
-              Nothing -> liftIO $ putStrLn "EOF, goodbye"
-              Just line -> do
-                  let parsed = parse pCommand line
-                  case parsed of
-                      [(Right cmd, "")] -> process cmd
-                      [(Left err, _)] -> liftIO $ putStrLn (show err)
-                      [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
-                      _ -> liftIO $ putStrLn ("Error: Invalid input")
-                  repl
+repl :: Bool -> REPL ()
+repl continue = do
+    input <- lift $ lift $ getInputLine "> "
+    case input of
+        Nothing -> liftIO $ putStrLn "EOF, goodbye"
+        Just line -> do
+            let parsed = parse pCommand line
+            case parsed of
+                [(Right cmd, "")] -> do
+                    continue' <- process cmd
+                    when continue (repl continue)
+                [(Left err, _)] -> liftIO $ putStrLn (show err)
+                [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
+                _ -> liftIO $ putStrLn ("Error: Invalid input")

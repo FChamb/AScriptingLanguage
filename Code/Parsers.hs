@@ -1,6 +1,7 @@
 module Parsers where
 
 import Data.List (nub)
+import Data.Either (rights)
 
 import Parsing
 import Expr
@@ -50,7 +51,7 @@ pCommand = do t <- identifier
                   return (Right (Repeat i block))
            ||| do string ":f"
                   f <- fileName
-                  return (Right (File f))
+                  return (Right (LoadFile f))
            ||| do string ":h"
                   return (Right Help)
            ||| return (Left (ParseError "Invalid command"))
@@ -59,12 +60,10 @@ pBlock :: Parser Command
 pBlock = do
     symbol "{"
     space
-    c <- pCommand
+    c <- pCommand `sepBy1'` symbol ";"
     space
     symbol "}"
-    case c of
-        Left err -> error (show err)
-        Right command -> return command
+    return $ Block (rights c)
 
 pFunc :: Parser (Either Error Command)
 pFunc = do symbol "def" -- Define a function

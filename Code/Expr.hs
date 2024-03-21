@@ -2,6 +2,7 @@ module Expr where
 
 import BinaryTree
 import Control.Monad.State
+import Error
 
 type Name = String
 
@@ -65,8 +66,9 @@ data Expr = Add Expr Expr
 data Command = Set Name Expr             -- assign an expression to a variable name
              | Print Expr                -- evaluate an expression and print the result
              | InputSet Name             -- Prompt for input and store into variable
-             | File Name                 -- Prompt for loading a file to run
+             | LoadFile FilePath         -- Prompt for loading a file to run
              | Repeat Int Command        -- Prompt for repeating a command
+             | Block [Command]           -- Representing a block command
              | DefUserFunc Name UserFunc -- Define a function
              | Quit                      -- Prompt for quiting program
              | Help                      -- Prompt for showing helpful options

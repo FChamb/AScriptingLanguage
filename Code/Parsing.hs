@@ -141,6 +141,12 @@ space                         :: Parser ()
 space                         =  do many (sat isSpace)
                                     return ()
 
+sepBy1' :: Parser a -> Parser sep -> Parser [a]
+sepBy1' p sep = do
+    x <- p
+    xs <- many (sep >> p)
+    return (x:xs)
+
 fileName                      :: Parser String
 fileName                      =  do space
                                     f <- many item
