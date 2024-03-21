@@ -99,9 +99,8 @@ eval vars fs (Pow x y) = do
 eval vars fs (Sqrt a) = do
     val <- eval vars fs a
     case val of
-        IntVal (-1) -> Left $ MathError "program does not support imaginary numbers"
-        -- all negatives
-        IntVal int -> Right (FloatVal (sqrt $ fromIntegral int))
+        IntVal int | int < 0 -> Left $ MathError "negatives not supported for this operation"
+                   | otherwise -> Right (FloatVal (sqrt $ fromIntegral int))
         FloatVal flt -> Right (FloatVal (sqrt flt))
         _ -> Left $ MathError "flawed square root operation"
 
@@ -130,7 +129,6 @@ eval vars fs (ToFloat e) = do
         IntVal i -> Right (FloatVal (fromIntegral i))
         FloatVal f -> Right (FloatVal f)
 
--- NEED TO FIX THIS
 eval vars fs (CallUserFunc name args) = do
     (UserFunc fargs stmts retExpr) <- case value name fs of
         Left _ -> Left $ ValueError ("No such function: " ++ name)
