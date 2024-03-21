@@ -63,7 +63,7 @@ executable H2
                        haskeline >= 0.8.2 && < 0.8.3,
                        QuickCheck >= 2.10 && < 3,
                        directory >= 0.1,
-                       mtl >= 1.0,
+                       mtl >= 2.2.2,
                        transformers >= 0.1
 
   -- Directories containing source files.
