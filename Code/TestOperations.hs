@@ -60,9 +60,9 @@ checkEval2Float opExpr fResult x y = evalBasic expr === Right expected
  - When given 1 or 2 floats, returns a float
  - When given anything else, gives a value error
  -}
-checkMixedMath :: TwoArgOperation 
-                  -> TwoIntOperation -> TwoFloatOperation 
-                  -> Value -> Value 
+checkMixedMath :: TwoArgOperation
+                  -> TwoIntOperation -> TwoFloatOperation
+                  -> Value -> Value
                   -> Property
 checkMixedMath expr intOp floatOp (IntVal a)   (IntVal b)   = checkEval2Int   expr intOp a b
 checkMixedMath expr intOp floatOp (FloatVal a) (IntVal b)   = checkEval2Float expr floatOp a (fromIntegral b)
@@ -107,11 +107,6 @@ prop_testEvalMod :: Value -> Value -> Property
 prop_testEvalMod a (IntVal 0)     = checkEvalMathError  $ Mod (Val a) zero_i_expr
 prop_testEvalMod a (FloatVal 0.0) = checkEvalMathError  $ Mod (Val a) zero_f_expr
 prop_testEvalMod a b              = checkMixedMath Mod (mod) (\x y -> snd (divMod' x y)) a b
-{-prop_testEvalMod (StrVal a) b     = checkEvalValueError $ Mod (Val (StrVal a)) (Val b)
-prop_testEvalMod a (StrVal b)     = checkEvalValueError $ Mod (Val a) (Val (StrVal b))
--- prop_testEvalMod a (FloatVal 0.0) = checkEvalMathError $ (Div (Val a) zero_f_expr)
-prop_testEvalMod (IntVal a) (IntVal b) = checkEval2Int Mod mod a b
-prop_testEvalMod a b = checkEvalValueError $ Mod (Val a) (Val b)-}
 
 {- Power AKA a^n tests -}
 prop_testPow :: Value -> Value -> Property
@@ -242,6 +237,32 @@ prop_evalConcat s1 s2 = evalBasic expr == Right expected
     where
         expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
         expected = StrVal (s1 ++ s2)
+
+
+prop_evalEqualSelf :: Value -> Property
+prop_evalEqualSelf v = evalBasic expr === Right (BoolVal True)
+    where expr = IsEq (Val v) (Val v)
+
+-- IsEq should always give opposite of NotEq
+prop_evalEqualOppositeNotEq :: Value -> Value -> Property
+prop_evalEqualOppositeNotEq v v1 = collect ("Eq: " ++ show (v == v1)) $
+    case isEq of
+         Right (BoolVal b) -> isNotEq === Right (BoolVal (not b))
+         a -> counterexample ("isEq gave: " ++ show a) (False)
+    where
+        isEqExpr    = IsEq (Val v) (Val v)
+        isNotEqExpr = NotEq (Val v) (Val v)
+        isEq = evalBasic isEqExpr
+        isNotEq = evalBasic isNotEqExpr
+
+prop_compareNumbers :: NVal -> NVal -> Property
+prop_compareNumbers (NVal n1) (NVal n2) = collect (show (compare l r)) $
+    evalBasic (IsEq (Val n1) (Val n2))        === Right (BoolVal (l == r)) .&&.
+    evalBasic (LessThan (Val n1) (Val n2))    === Right (BoolVal (l < r))  .&&.
+    evalBasic (GreaterThan (Val n1) (Val n2)) === Right (BoolVal (l > r))
+    where
+        l = numToFloat n1
+        r = numToFloat n2
 
 return []
 runOperationTests = $quickCheckAll
