@@ -85,7 +85,7 @@ process (DefUserFunc name func) = do
 process (If condition thenBlock elseBlock) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) condition of
-        Right (IntVal val) -> if val /= 0
+        Right (BoolVal b) -> if b
                               then process (Block [thenBlock])
                               else process (Block [elseBlock])
         Left e -> liftIO $ putStrLn (show e)

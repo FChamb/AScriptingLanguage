@@ -6,13 +6,14 @@ import Error
 
 type Name = String
 
-data Value = IntVal Int | FloatVal Float | StrVal String
+data Value = IntVal Int | FloatVal Float | StrVal String | BoolVal Bool
     deriving (Eq)
 
 instance Show Value where
     show (IntVal i) = show i
     show (FloatVal f) = show f
     show (StrVal s) = s
+    show (BoolVal b) = show b
 
 type Vars = Tree (Name, Value)
 
@@ -57,6 +58,10 @@ data Expr = Add Expr Expr
           | ToFloat Expr
           | Concat Expr Expr
           | CallUserFunc Name [Expr] -- User defined function, with variable number of arguments
+          | IsEq Expr Expr -- Boolean operations
+          | NotEq Expr Expr
+          | LessThan Expr Expr
+          | GreaterThan Expr Expr
           | Val Value
           | Var Name
   deriving (Show, Eq)

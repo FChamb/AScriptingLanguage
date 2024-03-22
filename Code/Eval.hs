@@ -149,10 +149,39 @@ eval vars fs (CallUserFunc name args) = do
         updateEval :: Name -> Expr -> Vars -> Either Error Vars
         updateEval n e vs = eval vs fs e >>= \v -> Right $ insert (n, v) vs
 
-intVal :: Value -> Maybe Int
-intVal (IntVal i) = Just i
-intVal _ = Nothing
 
-strVal :: Value -> Maybe String
-strVal (StrVal s) = Just s
-strVal _ = Nothing
+eval vars fs (IsEq a b) = do
+    aV <- eval vars fs a
+    bV <- eval vars fs b
+    return $ BoolVal $ checkExprEq aV bV
+
+eval vars fs (NotEq a b) = do
+    aV <- eval vars fs a
+    bV <- eval vars fs b
+    return $ BoolVal $ not $ checkExprEq aV bV
+
+eval vars fs (LessThan a b) = do
+    aV <- eval vars fs a
+    bV <- eval vars fs b
+    case (aV, bV) of
+        (IntVal left, IntVal right) -> Right $ BoolVal $ left < right
+        (FloatVal left, FloatVal right) -> Right $ BoolVal $ left < right
+        _ -> Left $ ValueError "Uncomparable types"
+
+eval vars fs (GreaterThan a b) = do
+    aV <- eval vars fs a
+    bV <- eval vars fs b
+    case (aV, bV) of
+        (IntVal left, IntVal right) -> Right $ BoolVal $ left > right
+        (FloatVal left, FloatVal right) -> Right $ BoolVal $ left > right
+        _ -> Left $ ValueError "Uncomparable types"
+
+
+checkExprEq :: Value -> Value -> Bool
+checkExprEq a b = do
+    case (a, b) of
+        (StrVal left, StrVal right) -> left == right
+        (IntVal left, IntVal right) -> left == right
+        (FloatVal left, FloatVal right) -> left == right
+        (BoolVal left, BoolVal right) -> left == right
+        _ -> False

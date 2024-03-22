@@ -74,6 +74,7 @@ pCommand = do t <- identifier
                   return (Right Help)
            ||| return (Left (ParseError "Invalid command"))
 
+
 pBlock :: Parser Command
 pBlock = do
     symbol "{"
@@ -105,19 +106,36 @@ pFuncStatement = do
        symbol ";"
        return $ FuncSetVar t e
 
--- Lowest priority operations go here
+-- Conditionals (==), (!=), lowest priority / evaluated last
 pExpr :: Parser Expr
-pExpr = do t <- pFactor
-           do symbol "+"
-              e <- pExpr
-              return (Add t e)
-            ||| do symbol "-"
-                   e <- pExpr
-                   return (Sub t e)
-            ||| do symbol "++"
-                   e <- pExpr
-                   return (Concat t e)
-            ||| return t
+pExpr = do a <- pMathExpr
+           do symbol "=="
+              b <- pMathExpr
+              return (IsEq a b)
+              ||| do symbol "!="
+                     b <- pMathExpr
+                     return (NotEq a b)
+              ||| do symbol "<"
+                     b <- pMathExpr
+                     return (LessThan a b)
+              ||| do symbol ">"
+                     b <- pMathExpr
+                     return (GreaterThan a b)
+              ||| return a
+
+-- Next lowest priority operations go here
+pMathExpr :: Parser Expr
+pMathExpr = do t <- pFactor
+               do symbol "+"
+                  e <- pMathExpr
+                  return (Add t e)
+                  ||| do symbol "-"
+                         e <- pMathExpr
+                         return (Sub t e)
+                  ||| do symbol "++"
+                         e <- pMathExpr
+                         return (Concat t e)
+                  ||| return t
 
 -- Higher priority operations go here (e.g. multiply, divide)
 pFactor :: Parser Expr
