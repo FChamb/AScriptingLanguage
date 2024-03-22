@@ -29,7 +29,7 @@ prop_evalToString (StrVal s) = evalBasic expr == Right expected
 prop_evalToString (BoolVal b) = evalBasic expr == Right expected
     where
         expr = ToString (Val (BoolVal b))
-        expected = BoolVal $ if b then True else False
+        expected = StrVal $ if b then "True" else "False"
 
 {- ToInt checks -}
 -- Test all kinds of values

@@ -2,6 +2,7 @@
 module TestOperations where
 
 import Test.QuickCheck
+import Data.Fixed (divMod')
 
 import Expr
 import Error
@@ -103,29 +104,34 @@ prop_testIntDiv a b = b /= 0 ==> checkEval2Int Div (div) (a*b) b
 -- TODO: modulo for floats?
 
 prop_testEvalMod :: Value -> Value -> Property
-prop_testEvalMod (StrVal a) b     = checkEvalValueError $ Mod (Val (StrVal a)) (Val b)
-prop_testEvalMod a (StrVal b)     = checkEvalValueError $ Mod (Val a) (Val (StrVal b))
 prop_testEvalMod a (IntVal 0)     = checkEvalMathError  $ Mod (Val a) zero_i_expr
+prop_testEvalMod a (FloatVal 0.0) = checkEvalMathError  $ Mod (Val a) zero_f_expr
+prop_testEvalMod a b              = checkMixedMath Mod (mod) (\x y -> snd (divMod' x y)) a b
+{-prop_testEvalMod (StrVal a) b     = checkEvalValueError $ Mod (Val (StrVal a)) (Val b)
+prop_testEvalMod a (StrVal b)     = checkEvalValueError $ Mod (Val a) (Val (StrVal b))
 -- prop_testEvalMod a (FloatVal 0.0) = checkEvalMathError $ (Div (Val a) zero_f_expr)
 prop_testEvalMod (IntVal a) (IntVal b) = checkEval2Int Mod mod a b
-prop_testEvalMod a b = checkEvalValueError $ Mod (Val a) (Val b)
+prop_testEvalMod a b = checkEvalValueError $ Mod (Val a) (Val b)-}
 
 {- Power AKA a^n tests -}
 prop_testPow :: Value -> Value -> Property
-prop_testPow (StrVal a) n     = checkEvalValueError $ Mod (Val (StrVal a)) (Val n)
-prop_testPow a (StrVal n)     = checkEvalValueError $ Mod (Val a) (Val (StrVal n))
+prop_testPow (StrVal a) n     = checkEvalValueError $ Pow (Val (StrVal a)) (Val n)
+prop_testPow a (StrVal n)     = checkEvalValueError $ Pow (Val a) (Val (StrVal n))
+prop_testPow (BoolVal a) n    = checkEvalValueError $ Pow (Val (BoolVal a)) (Val n)
+prop_testPow a (BoolVal n)    = checkEvalValueError $ Pow (Val a) (Val (BoolVal n))
 prop_testPow (IntVal a) (IntVal n) | a == 0 && n < 0  = checkEvalMathError $ Pow (Val (IntVal a)) (Val (IntVal n)) -- Divide by zero
                                    | n < 0            = checkEval2Float Pow (**) (fromIntegral a) (fromIntegral n) -- Fraction
                                    | otherwise        = checkEval2Int Pow (^) a n
 prop_testPow a (IntVal n) = checkEval2Float Pow (**) (numToFloat a) (fromIntegral n)
-prop_testPow aV nV | a <= 0.0  = checkEvalMathError $ Pow (Val aV) (Val nV) -- Divide by zero OR sqrt-like negative
+prop_testPow aV nV | a == 0.0 || n == 0.0  = checkEval2Float Pow (**) a n
+                   | a < 0.0   = checkEvalMathError $ Pow (Val aV) (Val nV) -- Divide by zero OR sqrt-like negative
                    | otherwise = checkEval2Float Pow (**) a n
     where
         a = numToFloat aV
         n = numToFloat nV
 
 prop_testEvalPowIntNon0 :: Int -> Int -> Property
-prop_testEvalPowIntNon0 a x = a /= 0 ==> checkEval2Int Pow (^) a x
+prop_testEvalPowIntNon0 a x = a /= 0 && x >= 0 ==> checkEval2Int Pow (^) a x
 
 -- Skip sqrt-like as complex for negative a
 prop_testEvalPowFloatReg :: Positive Float -> Float -> Property
@@ -190,7 +196,7 @@ prop_testSqrt value | x < 0 = checkEvalMathError $ Sqrt (Val value)
                     | otherwise = evalBasic (Sqrt (Val value)) === Right expected
     where
         x = numToFloat value
-        expected = FloatVal $ x ** 0.5
+        expected = FloatVal $ sqrt x
 
 {- Call Functions -}
 
