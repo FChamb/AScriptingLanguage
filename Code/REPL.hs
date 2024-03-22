@@ -81,13 +81,20 @@ process (Block cmds) = do
 process (DefUserFunc name func) = do
     liftState $ modify (\s -> s { funcs = insert (name, func) (funcs s) })
 
-
 process (If condition thenBlock elseBlock) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) condition of
         Right (BoolVal b) -> if b
                               then process (Block [thenBlock])
                               else process (Block [elseBlock])
+        Left e -> liftIO $ putStrLn (show e)
+
+process (While cond block) = do
+    st <- liftState $ get
+    case eval (vars st) (funcs st) cond of
+        Right (BoolVal b) -> if b then do process (Block [block])
+                                          process (While cond block)
+                             else liftIO $ putStrLn "complete"
         Left e -> liftIO $ putStrLn (show e)
 
 process (Help) = do

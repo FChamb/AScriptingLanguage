@@ -44,6 +44,15 @@ pCommand = do t <- identifier
            ||| do string "quit"
                   return (Right Quit)
            ||| do pFunc
+           ||| do string "while"
+                  space 
+                  condition <- pExpr
+                  space
+                  block <- pBlock
+                  return (Right (While condition block))
+                  {- case block of 
+                     Right b -> return (Right (While condition b))
+                     Left err -> return $ Left err -}
            ||| do string "repeat"
                   space
                   i <- integer
