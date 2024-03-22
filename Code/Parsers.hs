@@ -12,7 +12,13 @@ import Error
  -
  - COMMAND -> VAR = EXPR | VAR = input | print EXPR | def FUNCTION | if EXPR { Block }
  -
- - EXPR -> FACTOR
+ - EXPR -> MATHEXPR == MATHEXPR
+ -       | MATHEXPR != MATHEXPR
+ -       | MATHEXPR < MATHEXPR
+ -       | MATHEXPR > MATHEXPR
+ -       | MATHEXPR
+ -
+ - MATHEXPR -> FACTOR
  -        | TERM + EXPR
  -        | TERM - EXPR
  -        | TERM ++ EXPR
