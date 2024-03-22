@@ -13,8 +13,9 @@ import BinaryTree
 instance Arbitrary Value where
     arbitrary = frequency [
         (1, fmap (StrVal) arbitrary),
-        (2, fmap (IntVal) arbitrary),
-        (2, fmap (FloatVal) arbitrary)
+        (3, fmap (IntVal) arbitrary),
+        (3, fmap (FloatVal) arbitrary),
+        (1, fmap (BoolVal) arbitrary)
         ]
 
 
@@ -36,6 +37,21 @@ instance Arbitrary ValidName where
 -- Simple wrapper for calling eval with no defined vars or funcs
 evalBasic :: Expr -> Either Error Value
 evalBasic = eval Empty Empty
+
+-- Error checking utils
+ensureMathError :: Show a => Either Error a -> Property
+ensureMathError (Left (MathError _)) = property True
+ensureMathError other = counterexample ("Expected MathError, got: " ++ show other) False
+
+ensureValueError :: Show a => Either Error a -> Property
+ensureValueError (Left (ValueError _)) = property True
+ensureValueError other = counterexample ("Expected ValueError, got: " ++ show other) False
+
+checkEvalMathError :: Expr -> Property
+checkEvalMathError expr = ensureMathError $ evalBasic expr
+
+checkEvalValueError :: Expr -> Property
+checkEvalValueError expr = ensureValueError $ evalBasic expr
 
 -- Test direct values
 prop_testEvalVal :: Value -> Bool

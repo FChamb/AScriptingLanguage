@@ -35,8 +35,6 @@ type TwoIntOperation = Int -> Int -> Int
 type TwoFloatOperation = Float -> Float -> Float
 type FloatAndIntOperation = Float -> Int -> Float
 
-
-
 {-
  - Helper function to verify that a given Expr that takes two int arguments
  - always suceeds when given two ints and produces the same result as the
@@ -54,41 +52,34 @@ checkEval2Float opExpr fResult x y = evalBasic expr === Right expected
         expr = opExpr (Val (FloatVal x)) (Val (FloatVal y))
         expected = FloatVal (fResult x y)
 
-ensureMathError :: Show a => Either Error a -> Property
-ensureMathError (Left (MathError _)) = property True
-ensureMathError other = counterexample ("Expected MathError, got: " ++ show other) False
 
-ensureValueError :: Show a => Either Error a -> Property
-ensureValueError (Left (ValueError _)) = property True
-ensureValueError other = counterexample ("Expected ValueError, got: " ++ show other) False
 
-checkEvalMathError :: Expr -> Property
-checkEvalMathError expr = ensureMathError $ evalBasic expr
-
-checkEvalValueError :: Expr -> Property
-checkEvalValueError expr = ensureValueError $ evalBasic expr
+{- Check a mathematical function with two integer or float arguments that
+ - When given 2 ints, returns an integer
+ - When given 1 or 2 floats, returns a float
+ - When given anything else, gives a value error
+ -}
+checkMixedMath :: TwoArgOperation 
+                  -> TwoIntOperation -> TwoFloatOperation 
+                  -> Value -> Value 
+                  -> Property
+checkMixedMath expr intOp floatOp (IntVal a)   (IntVal b)   = checkEval2Int   expr intOp a b
+checkMixedMath expr intOp floatOp (FloatVal a) (IntVal b)   = checkEval2Float expr floatOp a (fromIntegral b)
+checkMixedMath expr intOp floatOp (IntVal a)   (FloatVal b) = checkEval2Float expr floatOp (fromIntegral a) b
+checkMixedMath expr intOp floatOp (FloatVal a) (FloatVal b) = checkEval2Float expr floatOp a b
+checkMixedMath expr intOp floatOp a b = checkEvalValueError $ expr (Val a) (Val b)
 
 {- Addition a + b -}
 prop_testEvalAdd :: Value -> Value -> Property
-prop_testEvalAdd (StrVal a) b = checkEvalValueError $ Add (Val (StrVal a)) (Val b)
-prop_testEvalAdd a (StrVal b) = checkEvalValueError $ Add (Val a) (Val (StrVal b))
-prop_testEvalAdd (IntVal a) (IntVal b) = checkEval2Int Add (+) a b
-prop_testEvalAdd a b = checkEval2Float Add (+) (numToFloat a) (numToFloat b)
+prop_testEvalAdd = checkMixedMath Add (+) (+)
 
 {- Subtraction a - b -}
 prop_testEvalSub :: Value -> Value -> Property
-prop_testEvalSub (StrVal a) b = checkEvalValueError $ Sub (Val (StrVal a)) (Val b)
-prop_testEvalSub a (StrVal b) = checkEvalValueError $ Sub (Val a) (Val (StrVal b))
-prop_testEvalSub (IntVal a) (IntVal b) = checkEval2Int Sub (-) a b
-prop_testEvalSub a b = checkEval2Float Sub (-) (numToFloat a) (numToFloat b)
+prop_testEvalSub = checkMixedMath Sub (-) (-)
 
 {- Multiplication a * b -}
 prop_testEvalMul :: Value -> Value -> Property
-prop_testEvalMul (StrVal a) b = checkEvalValueError $ Mul (Val (StrVal a)) (Val b)
-prop_testEvalMul a (StrVal b) = checkEvalValueError $ Mul (Val a) (Val (StrVal b))
-prop_testEvalMul (IntVal a) (IntVal b) = checkEval2Int Mul (*) a b
-prop_testEvalMul a b = checkEval2Float Mul (*) (numToFloat a) (numToFloat b)
-
+prop_testEvalMul = checkMixedMath Mul (*) (*)
 
 {- Division a / b -}
 -- Define zero to shorten later code
@@ -98,13 +89,11 @@ zero_f_expr :: Expr
 zero_f_expr = Val (FloatVal 0.0)
 
 prop_testDiv :: Value -> Value -> Property
-prop_testDiv (StrVal a) b     = checkEvalValueError $ Div (Val (StrVal a)) (Val b)
-prop_testDiv a (StrVal b)     = checkEvalValueError $ Div (Val a) (Val (StrVal b))
 prop_testDiv a (IntVal 0)     = checkEvalMathError  $ Div (Val a) zero_i_expr
 prop_testDiv a (FloatVal 0.0) = checkEvalMathError $ (Div (Val a) zero_f_expr)
 prop_testDiv (IntVal a) (IntVal b) = a `mod` b /= 0 ==>
                                      checkEval2Float Div (/) (fromIntegral a) (fromIntegral b)
-prop_testDiv a b = checkEval2Float Div (/) (numToFloat a) (numToFloat b)
+prop_testDiv a b = checkMixedMath Div (div) (/) a b
 
 -- Check integer division when they divide perfectly
 prop_testIntDiv :: Int -> Int -> Property
@@ -196,6 +185,7 @@ prop_testEvalAbsNegFloat (Negative f) = evalBasic expr == Right expected
 {- Square Root sqrt() -}
 prop_testSqrt :: Value -> Property
 prop_testSqrt (StrVal v) = checkEvalValueError $ Sqrt (Val (StrVal v))
+prop_testSqrt (BoolVal b) = checkEvalValueError $ Sqrt (Val (BoolVal b))
 prop_testSqrt value | x < 0 = checkEvalMathError $ Sqrt (Val value)
                     | otherwise = evalBasic (Sqrt (Val value)) === Right expected
     where

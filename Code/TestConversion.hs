@@ -26,6 +26,10 @@ prop_evalToString (StrVal s) = evalBasic expr == Right expected
     where
         expr = ToString (Val (StrVal s))
         expected = StrVal s
+prop_evalToString (BoolVal b) = evalBasic expr == Right expected
+    where
+        expr = ToString (Val (BoolVal b))
+        expected = BoolVal $ if b then True else False
 
 {- ToInt checks -}
 -- Test all kinds of values
@@ -38,6 +42,10 @@ prop_evalValueToInt (FloatVal f) = evalBasic expr === Right expected
     where
         expr = ToInt (Val (FloatVal f))
         expected = IntVal (truncate f)
+prop_evalValueToInt (BoolVal b) = evalBasic expr === Right expected
+    where
+        expr = ToInt (Val (BoolVal b))
+        expected = IntVal $ if b then 1 else 0
 -- Test random strings (usually not valid)
 prop_evalValueToInt (StrVal s) = isNothing validInt ==> case evalBasic expr of
                                                              Left (ValueError _) -> True
@@ -65,10 +73,10 @@ prop_evalValueToFloat (FloatVal f) = evalBasic expr === Right expected
     where
         expr = ToFloat (Val (FloatVal f))
         expected = FloatVal f
+prop_evalValueToFloat (BoolVal b) = ensureValueError $ evalBasic expr
+    where expr = ToFloat (Val (BoolVal b))
 -- Test random strings (usually not valid)
-prop_evalValueToFloat (StrVal s) = isNothing validFloat ==> case evalBasic expr of
-                                                                 Left (ValueError _) -> True
-                                                                 _ -> False
+prop_evalValueToFloat (StrVal s) = isNothing validFloat ==> ensureValueError $ evalBasic expr 
     where
         validFloat :: Maybe Float
         validFloat = readMaybe s
