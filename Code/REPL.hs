@@ -71,12 +71,10 @@ process (LoadFile f) = do
 process (Repeat n cmds) = do
     st <- liftState $ get
     forM_ [1..n] (\_ -> forM_ cmds (\c -> process c))
-    liftState $ put st
 
 process (Block cmds) = do
     st <- liftState $ get
     forM_ cmds (\c -> process c)
-    liftState $ put st
 
 process (DefUserFunc name func) = do
     liftState $ modify (\s -> s { funcs = insert (name, func) (funcs s) })

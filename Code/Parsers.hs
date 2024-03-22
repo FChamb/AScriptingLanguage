@@ -50,9 +50,6 @@ pCommand = do t <- identifier
                   space
                   block <- pBlock
                   return (Right (While condition block))
-                  {- case block of 
-                     Right b -> return (Right (While condition b))
-                     Left err -> return $ Left err -}
            ||| do string "repeat"
                   space
                   i <- integer
