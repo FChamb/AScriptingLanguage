@@ -75,7 +75,8 @@ data Command = Set Name Expr             -- assign an expression to a variable n
              | Block [Command]           -- Representing a block command
              | DefUserFunc Name UserFunc -- Define a function
              | If Expr Command Command   -- Define if then else
-             | While Expr Command      -- Prompt for while loop
+             | While Expr Command        -- Prompt for While loop
+             | For Expr Command Command  -- Prompt for For loop
              | Quit                      -- Prompt for quiting program
              | Help                      -- Prompt for showing helpful options
   deriving Show

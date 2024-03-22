@@ -97,6 +97,15 @@ process (While cond block) = do
                              else return () 
         Left e -> liftIO $ putStrLn (show e)
 
+process (For cond op block) = do
+    st <- liftState $ get
+    case eval (vars st) (funcs st) cond of 
+        Right (BoolVal b) -> if b then do process (Block [block])
+                                          process op
+                                          process (For cond op block)
+                                else return ()
+        Left err -> liftIO $ putStrLn(show err)
+
 process (Help) = do
     liftIO $ putStrLn ("List of program operations: ")
     liftIO $ putStrLn ("  - a + b {Addition}")
@@ -112,7 +121,8 @@ process (Help) = do
     liftIO $ putStrLn ("List of program commands: ")
     liftIO $ putStrLn ("  - print ... {Print the Command}")
     liftIO $ putStrLn ("  - repeat n {} {Repeat an operation, n times")
-    liftIO $ putStrLn ("  - while x {} {Repeat operation while x is true}")
+    liftIO $ putStrLn ("  - while (x) {} {While x, execute operation}")
+    liftIO $ putStrLn ("  - for (x; y) {} {While x is true, execute operation, after each iteration, execute y}")
     liftIO $ putStrLn ("  - quit {Quit the Program}")
     liftIO $ putStrLn ("  - :load fileName {Load a File}")
     liftIO $ putStrLn ("  - :help {Show Program Commands")

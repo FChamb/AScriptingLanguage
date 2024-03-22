@@ -45,11 +45,21 @@ pCommand = do t <- identifier
                   return (Right Quit)
            ||| do pFunc
            ||| do string "while"
-                  space 
+                  symbol "(" 
                   condition <- pExpr
-                  space
+                  symbol ")" 
                   block <- pBlock
                   return (Right (While condition block))
+           ||| do string "for"
+                  symbol "("
+                  condition <- pExpr
+                  symbol ";"
+                  operation <- pCommand
+                  symbol ")" 
+                  block <- pBlock
+                  case operation of 
+                       Right op -> return (Right (For condition op block))
+                       Left err -> return $ Left err
            ||| do string "repeat"
                   space
                   i <- integer
