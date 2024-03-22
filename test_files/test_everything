@@ -1,0 +1,46 @@
+x = 10
+print x
+y = 5
+print y
+z = x + y
+print z
+z = x - y
+print z
+print toFloat(10)
+print toFloat(5)
+print 10.0 + 5.0
+print 10.0 - 5.0
+print 10 + 5.0
+print 10.0 + 5
+print 10 - 5.0
+print 10.0 - 5
+print 4 * 5
+print 4.0 * 5.0
+print 10 / 5
+print 10.0 / 5.0
+print 4.0 * 5
+print 4 * 5.0
+print 10 / 5.0
+print 10.0 / 5
+print abs(-5.0)
+print abs(-5)
+print 5 % 2
+print 5.0 % 2.0
+print 5.0 % 2
+print 5 % 2.0
+print pow(3, 2)
+print pow(3.0, 2)
+print pow(3, 2.0)
+print sqrt(25)
+print sqrt(25.0)
+if 10 == 10 then print "True" else print "False"
+if 11 == 10 then print "True" else print "False"
+if 10 != 10 then print "True" else print "False"
+if 11 != 10 then print "True" else print "False"
+if 10 < 10 then print "True" else print "False"
+if 10 < 11 then print "True" else print "False"
+if 10 > 10 then print "True" else print "False"
+if 11 > 10 then print "True" else print "False"
+repeat 5 { print "Hello, world!" }
+:help
+:load ../test_files/test

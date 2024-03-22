@@ -187,6 +187,11 @@ pTerm = do v <- pValue
                   e <- pExpr
                   symbol ")"
                   return (ToInt e)
+           ||| do symbol "toFloat"
+                  symbol "("
+                  e <- pExpr
+                  symbol ")"
+                  return (ToFloat e)
            ||| do symbol "abs"
                   symbol "("
                   e <- pExpr
