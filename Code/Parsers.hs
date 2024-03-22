@@ -164,11 +164,6 @@ pTerm = do v <- pValue
                   symbol "("
                   e <- pExpr
                   symbol ")"
-                  return (ToString e)
-           ||| do symbol "toInt"
-                  symbol "("
-                  e <- pExpr
-                  symbol ")"
                   return (ToInt e)
            ||| do symbol "abs"
                   symbol "("
