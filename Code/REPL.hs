@@ -92,7 +92,7 @@ process (While cond block) = do
     case eval (vars st) (funcs st) cond of
         Right (BoolVal b) -> if b then do process (Block [block])
                                           process (While cond block)
-                             else liftIO $ putStrLn "complete"
+                             else return () 
         Left e -> liftIO $ putStrLn (show e)
 
 process (Help) = do
@@ -106,10 +106,11 @@ process (Help) = do
     liftIO $ putStrLn ("  - pow(a,b) {Power}")
     liftIO $ putStrLn ("  - sqrt(a) {Square Root}")
     liftIO $ putStrLn ("  - a = 1 {Assign variables}")
-    liftIO $ putStrLn ("  - If x then y else z {If then else conditionals")
+    liftIO $ putStrLn ("  - if x then y else z {If then else conditionals")
     liftIO $ putStrLn ("List of program commands: ")
     liftIO $ putStrLn ("  - print ... {Print the Command}")
     liftIO $ putStrLn ("  - repeat n {} {Repeat an operation, n times")
+    liftIO $ putStrLn ("  - while x {} {Repeat operation while x is true}")
     liftIO $ putStrLn ("  - quit {Quit the Program}")
     liftIO $ putStrLn ("  - :load fileName {Load a File}")
     liftIO $ putStrLn ("  - :help {Show Program Commands")
