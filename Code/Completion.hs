@@ -21,23 +21,40 @@ completions = completeWordWithPrev Nothing hl_separators completor
 completor :: MonadIO m => String -> String -> (StateT Env m) [Completion]
 completor prev cur = if null prev then completeFirst cur
                      else completeVarOrFunc cur
+                     --else if (reverse prev) == ":load" then listFiles cur
 
 
 -- Commands that can easily be completed
 firstWordCompletions :: [String]
-firstWordCompletions = ["print", ":f", ":q"]
+firstWordCompletions = ["print", "repeat", "quit", ":load", ":help"]
 
 completeFirst :: Monad m => String -> m [Completion]
 completeFirst s = return $ map simpleCompletion matching
     where matching = filter (isPrefixOf s) firstWordCompletions
 
+builtInFuncs :: [String]
+builtInFuncs = ["sqrt", "pow", "abs"]
 
 completeVarOrFunc :: Monad m => String -> (StateT Env m) [Completion]
 completeVarOrFunc s = do
-        state <- get
-        let funcCompletions = map (\s -> s ++ "(") $ completeFromTree s (funcs state)
-        let varCompletions = completeFromTree s $ vars state
-        return $ map simpleCompletion (funcCompletions ++ varCompletions)
+    varCompls <- completeVar s
+    fCompls <- completeFunc s
+    return $ fCompls ++ varCompls
+
+completeVar :: Monad m => String -> (StateT Env m) [Completion]
+completeVar s = do
+    state <- get
+    let varMatches = completeFromTree s (vars state)
+    return $ map simpleCompletion varMatches
+
+completeFunc :: Monad m => String -> (StateT Env m) [Completion]
+completeFunc s = do
+    state <- get
+    let builtInMatches = filter (isPrefixOf s) builtInFuncs
+    let userMatches = completeFromTree s $ funcs state
+    let allMatches = builtInMatches ++ userMatches
+    let funcs = map (\s -> s ++ "(") allMatches
+    return $ map (\s -> (simpleCompletion s) {isFinished=False}) funcs
 
 -- Current input -> Tree -> possible completions
 completeFromTree :: String -> Tree (String, a) -> [String]
