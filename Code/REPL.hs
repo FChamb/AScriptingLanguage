@@ -14,6 +14,8 @@ import System.Exit (exitSuccess)
 import Data.Either (rights)
 import System.IO.Error
 import Control.Exception
+import Data.List (dropWhileEnd)
+import Data.Char (isSpace)
 
 import Expr
 import Parsing
@@ -115,7 +117,7 @@ process (Help) = do
     liftIO $ putStrLn ("  - :load fileName {Load a File}")
     liftIO $ putStrLn ("  - :help {Show Program Commands")
 
-process (Quit) = do liftIO $ putStrLn ("Closing")
+process (Quit) = do liftIO $ putStrLn ("Exiting program")
                     liftIO exitSuccess
 
 loadFile :: Name -> IO ()
@@ -151,7 +153,7 @@ repl continue = do
             True -> liftIO $ putStrLn "EOF, goodbye"
             False -> liftIO $ putStr ""
         Just line -> do
-            let parsed = parse pCommand line
+            let parsed = parse pCommand (dropWhile isSpace (dropWhileEnd isSpace line))
             case parsed of
                 [(Right cmd, "")] -> process cmd
                 [(Right cmd, rem)] -> liftIO $ putStrLn ("ParseError: Unconsumed input '" ++ rem ++ "'")
