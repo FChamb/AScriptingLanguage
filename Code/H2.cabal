@@ -75,5 +75,5 @@ executable H2
 test-suite quickcheck-test
     type: exitcode-stdio-1.0
     main-is: TestMain.hs
-    other-modules: Test TestConversion TestOperations TestCompletion Parsing Expr Error Eval BinaryTree Completion
+    other-modules: Test TestConversion TestOperations TestCompletion TestBinaryTree Parsing Expr Error Eval BinaryTree Completion
     build-depends: base, QuickCheck, mtl, haskeline

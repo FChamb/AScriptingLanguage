@@ -4,10 +4,19 @@ import Test
 import TestConversion
 import TestOperations
 import TestCompletion
+import TestBinaryTree
+
+allTestSuites = [
+    runMainTests, 
+    runConversionTests,
+    runOperationTests,
+    runCompletionTests,
+    runBinaryTreeTests
+    ]
 
 main :: IO ()
 main = do
-    results <- sequence [runMainTests, runConversionTests, runOperationTests, runCompletionTests]
+    results <- sequence allTestSuites
     let allSuc = and results
 
     case allSuc of
