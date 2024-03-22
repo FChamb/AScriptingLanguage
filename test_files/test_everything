@@ -42,5 +42,9 @@ if 10 < 11 then print "True" else print "False"
 if 10 > 10 then print "True" else print "False"
 if 11 > 10 then print "True" else print "False"
 repeat 5 { print "Hello, world!" }
+x = 1
+while (x < 10) { x = x + 1; print x }
+x = 1
+for (x < 10; x = x + 1) { print x }
 :help
 :load ../test_files/test
