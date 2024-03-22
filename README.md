@@ -55,3 +55,8 @@ or run with cabal:
 ```console
 cabal test
 ```
+
+To run manual tests via file input, use the script in the Code directory:
+```console
+./runTests.sh
+```

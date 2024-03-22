@@ -1,0 +1,1 @@
+cabal run H2 ../test_files/test_everything
