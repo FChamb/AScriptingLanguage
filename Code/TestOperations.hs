@@ -249,4 +249,4 @@ prop_compareNumbers (NVal n1) (NVal n2) = collect (show (compare l r)) $
         r = numToFloat n2
 
 return []
-runOperationTests = $quickCheckAll
+runOperationTests = $forAllProperties (quickCheckWithResult stdArgs { maxSuccess = 200 })
