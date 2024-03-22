@@ -48,17 +48,21 @@ checkEval2Int opExpr fResult x y = evalBasic expr === Right expected
         expected = IntVal (fResult x y)
 
 checkEval2Float :: TwoArgOperation -> TwoFloatOperation -> Float -> Float -> Property
-checkEval2Float opExpr fResult x y = evalBasic expr === Right expected
+checkEval2Float opExpr fResult x y = if (isNaN expectedFloat || isInfinite expectedFloat)
+                                        then ensureMathError res
+                                        else res === Right (FloatVal expectedFloat)
     where
         expr = opExpr (Val (FloatVal x)) (Val (FloatVal y))
-        expected = FloatVal (fResult x y)
-
+        res = evalBasic expr
+        expectedFloat = fResult x y
 
 
 {- Check a mathematical function with two integer or float arguments that
  - When given 2 ints, returns an integer
  - When given 1 or 2 floats, returns a float
  - When given anything else, gives a value error
+ -
+ - Additionally, if the float operation returns NaN, then we expect a MathError
  -}
 checkMixedMath :: TwoArgOperation
                   -> TwoIntOperation -> TwoFloatOperation
@@ -101,7 +105,6 @@ prop_testIntDiv :: Int -> Int -> Property
 prop_testIntDiv a b = b /= 0 ==> checkEval2Int Div (div) (a*b) b
 
 {- Modulo Tests -}
--- TODO: modulo for floats?
 
 prop_testEvalMod :: Value -> Value -> Property
 prop_testEvalMod a (IntVal 0)     = checkEvalMathError  $ Mod (Val a) zero_i_expr
@@ -110,23 +113,9 @@ prop_testEvalMod a b              = checkMixedMath Mod (mod) (\x y -> snd (divMo
 
 {- Power AKA a^n tests -}
 prop_testPow :: Value -> Value -> Property
-prop_testPow (StrVal a) n     = checkEvalValueError $ Pow (Val (StrVal a)) (Val n)
-prop_testPow a (StrVal n)     = checkEvalValueError $ Pow (Val a) (Val (StrVal n))
-prop_testPow (BoolVal a) n    = checkEvalValueError $ Pow (Val (BoolVal a)) (Val n)
-prop_testPow a (BoolVal n)    = checkEvalValueError $ Pow (Val a) (Val (BoolVal n))
-prop_testPow (IntVal a) (IntVal n) | a == 0 && n < 0  = checkEvalMathError $ Pow (Val (IntVal a)) (Val (IntVal n)) -- Divide by zero
-                                   | n < 0            = checkEval2Float Pow (**) (fromIntegral a) (fromIntegral n) -- Fraction
-                                   | otherwise        = checkEval2Int Pow (^) a n
-prop_testPow a (IntVal n) = checkEval2Float Pow (**) (numToFloat a) (fromIntegral n)
-prop_testPow aV nV | a == 0.0 || n == 0.0  = checkEval2Float Pow (**) a n
-                   | a < 0.0   = checkEvalMathError $ Pow (Val aV) (Val nV) -- Divide by zero OR sqrt-like negative
-                   | otherwise = checkEval2Float Pow (**) a n
-    where
-        a = numToFloat aV
-        n = numToFloat nV
-
-prop_testEvalPowIntNon0 :: Int -> Int -> Property
-prop_testEvalPowIntNon0 a x = a /= 0 && x >= 0 ==> checkEval2Int Pow (^) a x
+prop_testPow (IntVal a) (IntVal n) | n < 0 = discard
+                                   | otherwise = checkEval2Int Pow (^) a n
+prop_testPow a n = checkMixedMath Pow (^) (**) a n
 
 -- Skip sqrt-like as complex for negative a
 prop_testEvalPowFloatReg :: Positive Float -> Float -> Property
@@ -134,11 +123,6 @@ prop_testEvalPowFloatReg (Positive a) x = a /= 0 ==> evalBasic expr === Right ex
     where
         expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
         expected = FloatVal (a**x)
-
-prop_testEvalPowFloatFractional :: Negative Float -> Float -> Property
-prop_testEvalPowFloatFractional (Negative a) x = isNaN (a**x) ==> ensureMathError $ evalBasic expr
-    where
-        expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
 
 -- 0^x positive
 prop_testEvalPow0IntPos :: Positive Int -> Property
