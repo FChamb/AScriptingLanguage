@@ -15,19 +15,19 @@ balanceFactor (Tree _ l r) = height l - height r
 
 moveRight :: Tree a -> Tree a
 moveRight (Tree x (Tree y ll lr) r) = Tree y ll (Tree x lr r)
-moveRight _ = error ("Invalid move right")
+moveRight t = t
 
 moveLeft :: Tree a -> Tree a
 moveLeft (Tree x l (Tree y rl rr)) = Tree y (Tree x l rl) rr
-moveLeft _ = error ("Invalid move left")
+moveLeft t = t
 
 moveRightThenLeft :: Tree a -> Tree a
 moveRightThenLeft (Tree x l r) = moveLeft (Tree x (moveRight l) r)
-moveRightThenLeft _ = error ("Invalid move right then left")
+moveRightThenLeft t = t
 
 moveLeftThenRight :: Tree a -> Tree a
 moveLeftThenRight (Tree x l r) = moveRight (Tree x l (moveLeft r))
-moveLeftThenRight _ = error ("Invalid move left then right")
+moveLeftThenRight t = t
 
 balance :: Tree a -> Tree a
 balance t
@@ -52,7 +52,7 @@ value n (Tree node l r) = case compare n (fst node) of
     LT -> value n l
     GT -> value n r
 
-remove :: Ord n => n -> Tree (n, v) -> (Tree (n, v))
+remove :: Ord n => n -> Tree (n, v) -> Tree (n, v)
 remove _ Empty = Empty
 remove n (Tree node l r) = balance $ case compare n (fst node) of
     EQ -> delete (Tree node l r)
@@ -60,9 +60,9 @@ remove n (Tree node l r) = balance $ case compare n (fst node) of
     GT -> Tree node l (remove n r)
 
 delete :: Ord n => Tree (n, v) -> Tree (n, v)
-delete (Tree node l Empty) = l
-delete (Tree node Empty r) = r
-delete (Tree small l r)
+delete (Tree _ l Empty) = l
+delete (Tree _ Empty r) = r
+delete (Tree _ l r)
   = Tree small l (remove (fst small) r)
   where small = smallestNode r
 
