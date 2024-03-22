@@ -118,7 +118,7 @@ loadFile file = do
               evalStateT (runInputTBehavior (useFile file) defaultSettings (runExceptT (repl False))) initState
     case result of
         Left err -> putStrLn "Error: File not found"
-        Right (Left err) -> do putStrLn $ "Error: " ++ (show err)
+        Right (Left err) -> do putStrLn $ show err
         Right (Right newState) -> return ()
 
 remember :: Command -> StateT Env (ExceptT Error IO) ()
@@ -148,14 +148,13 @@ repl continue = do
             let parsed = parse pCommand line
             case parsed of
                 [(Right cmd, "")] -> process cmd
+                [(Right cmd, rem)] -> liftIO $ putStrLn ("ParseError: Unconsumed input '" ++ rem ++ "'")
                 [(Left err, _)] -> liftIO $ putStrLn (show err)
-                [(Right _, rem)] -> liftIO $ putStrLn ("Error: Unconsumed input '" ++ rem ++ "'")
-                _ -> liftIO $ putStrLn ("Error: Invalid input")
             repl continue
 
 runREPL :: Env -> IO ()
 runREPL initState = do
     result <- evalStateT (runInputT hlSettings (runExceptT (repl True))) initState
     case result of
-        Left err -> putStrLn $ "Error: " ++ show err
+        Left err -> putStrLn $ show err
         Right _ -> return ()
