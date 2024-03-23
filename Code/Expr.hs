@@ -83,6 +83,6 @@ type Funcs = Tree (Name, UserFunc)
  - Eval is constructed using the Env data and StateT syntax. Commented out code
  - below represents the old data State type.
  -}
-data Env = Env {vars :: Vars, funcs :: Funcs, history :: [Command]}
+data Env = Env {vars :: Vars, funcs :: Funcs}
 type Eval a = StateT Env (Either Error) a
---data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}
+--data State = State {vars :: Tree (Name, Value), funcs :: Funcs}
