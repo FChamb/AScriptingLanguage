@@ -167,6 +167,13 @@ prop_testEvalAbsNegFloat (Negative f) = evalBasic expr == Right expected
         expr = (Abs . Val . FloatVal) f
         expected = FloatVal (-f)
 
+prop_testEvalAbsValue :: Value -> Property
+prop_testEvalAbsValue (IntVal i) = discard
+prop_testEvalAbsValue (FloatVal f) = discard
+prop_testEvalAbsValue v = ensureValueError $ evalBasic expr
+    where
+        expr = Abs (Val v)
+
 {- Square Root sqrt() -}
 prop_testSqrt :: Value -> Property
 prop_testSqrt (StrVal v) = checkEvalValueError $ Sqrt (Val (StrVal v))
@@ -222,7 +229,13 @@ prop_evalConcat s1 s2 = evalBasic expr == Right expected
         expr = Concat (Val (StrVal s1)) (Val (StrVal s2))
         expected = StrVal (s1 ++ s2)
 
+-- Test concatenating not strings
+prop_evalConcatNotString :: Value -> Value -> Property
+prop_evalConcatNotString (StrVal _) _ = discard
+prop_evalConcatNotString _ (StrVal _) = discard
+prop_evalConcatNotString a b = checkEvalValueError $ Concat (Val a) (Val b)
 
+{-- Equality and comparison operators --}
 prop_evalEqualSelf :: Value -> Property
 prop_evalEqualSelf v = evalBasic expr === Right (BoolVal True)
     where expr = IsEq (Val v) (Val v)
