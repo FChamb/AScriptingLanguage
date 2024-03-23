@@ -26,7 +26,7 @@ import Completion
 
 -- Default state represented by Env for starting program loop
 initState :: Env
-initState = Env Empty Empty []
+initState = Env Empty Empty
 
 --type REPL a = StateT Env (ExceptT Error (InputT IO)) a
 type REPL a = ExceptT Error (InputT (StateT Env IO)) a
