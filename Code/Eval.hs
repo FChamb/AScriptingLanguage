@@ -166,7 +166,6 @@ eval vars fs (ToInt e) = do
                         False -> Right (IntVal 0) -- 0 for false
         IntVal i -> Right (IntVal i)
         FloatVal f -> Right (IntVal (truncate f))
-        Left err -> Left $ err -- Passes up error raised inside of toInt call
 
 {- Convert given value to FloatVal, if error in given expression, propagates up.
    ValueError for booleans & non-numeric strings -}
@@ -179,7 +178,6 @@ eval vars fs (ToFloat e) = do
         IntVal i -> Right (FloatVal (fromIntegral i))
         FloatVal f -> Right (FloatVal f)
         BoolVal b -> Left $ ValueError "Cannot convert boolean to float"
-        _ -> Left $ err
 
 -- Boolean operations
 

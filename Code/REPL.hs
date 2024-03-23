@@ -4,16 +4,15 @@ import System.Console.Haskeline
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
-import Control.Monad.Trans.Except
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Control.Monad (replicateM_)
 import Control.Monad (forM_)
 import Control.Monad (when)
 import Control.Monad (guard)
-import System.Directory
 import System.Exit (exitSuccess)
 import Data.Either (rights)
-import System.IO.Error
-import Control.Exception
+import System.IO.Error (isDoesNotExistError)
+import Control.Exception (tryJust)
 import Data.List (dropWhileEnd)
 import Data.Char (isSpace)
 
@@ -33,15 +32,6 @@ type REPL a = ExceptT Error (InputT (StateT Env IO)) a
 
 liftState = lift . lift
 liftInput = lift
-
-{-process :: LState -> Command -> IO ()
-process st (Set var e) = do let st' = case (eval e) of
-                                (Just x) -> updateVars var x (vars LState)
-                                Nothing -> do
-                                    putStrLn("Bad.")
-                                    st
-                            repl st'
--}
 
 process :: Command -> REPL ()
 process (Set var e) = do
@@ -104,7 +94,7 @@ process (For cond op block) = do
                                           process op
                                           process (For cond op block)
                                 else return ()
-        Left err -> liftIO $ putStrLn(show err)
+        Left e -> liftIO $ putStrLn(show e)
 
 process (Help) = do
     liftIO $ putStrLn ("List of program operations: ")
