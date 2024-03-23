@@ -107,11 +107,11 @@ eval vars fs (Pow x y) = do
         (IntVal intA, IntVal intB) | intA == 0 && intB < 0 -> Left $ MathError "Division by 0 is undefined"
                                    | intB < 0              -> Right $ FloatVal ((fromIntegral intA) ** (fromIntegral intB)) -- negative exponent == float
                                    | otherwise             -> Right (IntVal (intA ^ intB)) -- ^ operator solely used for integers
-        (FloatVal fltA, FloatVal fltB) | isNaN $ fltA ** fltB -> Left $ MathError "Fail."
-                                       | isInfinite $ fltA ** fltB -> Left $ MathError "Fail."
+        (FloatVal fltA, FloatVal fltB) | isNaN $ fltA ** fltB -> Left $ MathError "Program does not support imaginary numbers"
+                                       | isInfinite $ fltA ** fltB -> Left $ MathError "Division by 0 is undefined"
                                        | otherwise -> Right (FloatVal (fltA ** fltB))
-        (IntVal int, FloatVal flt) | isNaN $ (fromIntegral int) ** flt -> Left $ MathError "Fail."
-                                   | isInfinite $ (fromIntegral int) ** flt -> Left $ MathError "Fail."
+        (IntVal int, FloatVal flt) | isNaN $ (fromIntegral int) ** flt -> Left $ MathError "Program does not support imaginary numbers"
+                                   | isInfinite $ (fromIntegral int) ** flt -> Left $ MathError "Division by 0 is undefined"
                                    | otherwise -> Right (FloatVal (fromIntegral int ** flt))
         (FloatVal flt, IntVal int) | flt == 0.0 && int < 0 -> Left $ MathError "Division by 0 is undefined"
                                    | otherwise -> Right (FloatVal (flt ** fromIntegral int))
