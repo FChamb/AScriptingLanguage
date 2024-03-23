@@ -12,11 +12,11 @@ import Error
  -
  - COMMAND -> VAR = EXPR | VAR = input | print EXPR | def FUNCTION | if EXPR { Block }
  -
- - EXPR -> MATHEXPR == MATHEXPR
+ - EXPR -> MATHEXPR
+ -       | MATHEXPR == MATHEXPR
  -       | MATHEXPR != MATHEXPR
  -       | MATHEXPR < MATHEXPR
  -       | MATHEXPR > MATHEXPR
- -       | MATHEXPR
  -
  - MATHEXPR -> FACTOR
  -        | TERM + EXPR
@@ -33,7 +33,7 @@ import Error
  -     | TERM / FACTOR
  -     | TERM mod TERM
  -
- - VAL = STRING | INT | FLOAT
+ - VAL -> STRING | INT | FLOAT
  -}
 
 pCommand :: Parser (Either Error Command)
