@@ -49,7 +49,6 @@ process (InputSet var) = do
                        let newVars = insert (var, StrVal inp) (vars st)
                        liftState $ modify (\s -> s { vars = newVars })
 
-
 process (Print e) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) e of
@@ -82,19 +81,19 @@ process (If condition thenBlock elseBlock) = do
 process (While cond block) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) cond of
-        Right (BoolVal b) -> if b then do process (Block [block])
-                                          process (While cond block)
-                             else return () 
-        Left e -> liftIO $ putStrLn (show e)
+        Right (BoolVal b) -> if b then do process (Block [block]) -- execute iteration
+                                          process (While cond block) -- recursive call enters next iteration
+                             else return () -- end of loop
+        Left e -> liftIO $ putStrLn (show e) -- error with conditional
 
 process (For cond op block) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) cond of 
-        Right (BoolVal b) -> if b then do process (Block [block])
-                                          process op
-                                          process (For cond op block)
-                                else return ()
-        Left e -> liftIO $ putStrLn(show e)
+        Right (BoolVal b) -> if b then do process (Block [block]) -- execute iteration
+                                          process op -- execute updater
+                                          process (For cond op block) -- recursive call enters next iteration
+                                else return () -- end of loop
+        Left e -> liftIO $ putStrLn(show e) -- error with conditional
 
 process (Help) = do
     liftIO $ putStrLn ("List of program operations: ")
@@ -138,11 +137,8 @@ repeatCmds :: Command -> [Command]
 repeatCmds (Block cmds) = concatMap repeatCmds cmds
 repeatCmd cmd = [cmd]
 
--- Read, Eval, Print Loop
--- This reads and parses the input using the pCommand parser, and calls
--- 'process' to process the command.
--- 'process' will call 'repl' when done, so the system loops.
-
+{- Read, Eval, Print Loop. This reads and parses the input using the pCommand parser.
+    calls 'process' to process the command. 'process' calls 'repl' when done, so the system loops. -}
 repl :: Bool -> REPL ()
 repl continue = do
     input <- case continue of
