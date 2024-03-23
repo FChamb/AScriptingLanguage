@@ -195,7 +195,7 @@ eval vars fs (NotEq a b) = do
     bV <- eval vars fs b
     return $ BoolVal $ not $ checkExprEq aV bV
 
--- Less than
+-- Less than, ValueError for bools and strings
 eval vars fs (LessThan a b) = do
     aV <- eval vars fs a
     bV <- eval vars fs b
@@ -206,7 +206,7 @@ eval vars fs (LessThan a b) = do
         (FloatVal left, FloatVal right) -> Right $ BoolVal $ left < right
         _ -> Left $ ValueError "Uncomparable types"
 
--- Greater than
+-- Greater than, ValueError for bools and strings 
 eval vars fs (GreaterThan a b) = do
     aV <- eval vars fs a
     bV <- eval vars fs b
@@ -217,7 +217,7 @@ eval vars fs (GreaterThan a b) = do
         (FloatVal left, FloatVal right) -> Right $ BoolVal $ left > right
         _ -> Left $ ValueError "Uncomparable types"
 
--- Helper function to convert values to a boolean
+-- Helper function that checks equality and returns a boolean
 checkExprEq :: Value -> Value -> Bool
 checkExprEq a b = do
     case (a, b) of
