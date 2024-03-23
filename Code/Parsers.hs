@@ -91,7 +91,7 @@ pCommand = do t <- identifier
                   return (Right Help)
            ||| return (Left (ParseError "Invalid command"))
 
-
+-- Block command syntax for the parser. Enables ';' for multiple commands.
 pBlock :: Parser Command
 pBlock = do
     symbol "{"

@@ -10,6 +10,12 @@ import Parsing
 import Expr
 import REPL
 
+{- Main
+ -
+ - Main entry point into program. Takes command line arguments
+ - as an input for possibly loading a file to run. If nothing
+ - is provided, REPL loop starts at default state.
+-}
 main :: IO ()
 main = do
     args <- getArgs

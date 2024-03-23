@@ -76,6 +76,13 @@ data FuncStatement = FuncSetVar Name Expr -- TODO: support some kind of if too?
     deriving (Show)
 type Funcs = Tree (Name, UserFunc)
 
+{-
+ - StateT
+ -
+ - Implementation of StateT with first defines a data type, Env. Then a type
+ - Eval is constructed using the Env data and StateT syntax. Commented out code
+ - below represents the old data State type.
+ -}
 data Env = Env {vars :: Vars, funcs :: Funcs, history :: [Command]}
 type Eval a = StateT Env (Either Error) a
 --data State = State {vars :: Tree (Name, Value), funcs :: Funcs, history :: [Command]}

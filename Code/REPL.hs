@@ -24,6 +24,7 @@ import BinaryTree
 import Error
 import Completion
 
+-- Default state represented by Env for starting program loop
 initState :: Env
 initState = Env Empty Empty []
 
@@ -33,6 +34,13 @@ type REPL a = ExceptT Error (InputT (StateT Env IO)) a
 liftState = lift . lift
 liftInput = lift
 
+{- Process Commands
+ -
+ - Process is a function which takes a user command and provides a REPL
+ - type for the haskeline implementation of the program loop. REPL type
+ - is defined above. There are various options for every input command
+ - to process.
+-}
 process :: Command -> REPL ()
 process (Set var e) = do
     st <- liftState $ get
@@ -41,6 +49,7 @@ process (Set var e) = do
         Right x -> liftState $ modify (\s -> s { vars = insert (var, x) (vars s) })
         Left e -> liftIO $ putStrLn (show e)
 
+-- InputSet processes the user provided options to define a new variable
 process (InputSet var) = do
     input <- liftInput $ getInputLine ""
     case input of
@@ -49,27 +58,33 @@ process (InputSet var) = do
                        let newVars = insert (var, StrVal inp) (vars st)
                        liftState $ modify (\s -> s { vars = newVars })
 
+-- Print is supported to print the result or output of a argument
 process (Print e) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) e of
         Right evaled -> liftIO $ putStrLn (show evaled)
         Left e -> liftIO $ putStrLn (show e)
 
+-- LoadFile processes a provided file input by calling the appropriate function
 process (LoadFile f) = do
     liftIO $ putStrLn $ "Loading File..."
     liftIO $ loadFile f
 
+-- Repeat takes the provided number of repetitions and uses monadic action to repeat process a command
 process (Repeat n cmds) = do
     st <- liftState $ get
     forM_ [1..n] (\_ -> forM_ cmds (\c -> process c))
 
+-- Block enables functionality for repeat, if then else, while and for loops
 process (Block cmds) = do
     st <- liftState $ get
     forM_ cmds (\c -> process c)
 
+-- Define a user specific function
 process (DefUserFunc name func) = do
     liftState $ modify (\s -> s { funcs = insert (name, func) (funcs s) })
 
+-- If else then processing for conditional statements
 process (If condition thenBlock elseBlock) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) condition of
@@ -78,6 +93,7 @@ process (If condition thenBlock elseBlock) = do
                               else process (Block [elseBlock])
         Left e -> liftIO $ putStrLn (show e)
 
+-- While loop process
 process (While cond block) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) cond of
@@ -86,6 +102,7 @@ process (While cond block) = do
                              else return () -- end of loop
         Left e -> liftIO $ putStrLn (show e) -- error with conditional
 
+-- For loop process
 process (For cond op block) = do
     st <- liftState $ get
     case eval (vars st) (funcs st) cond of 
@@ -95,6 +112,7 @@ process (For cond op block) = do
                                 else return () -- end of loop
         Left e -> liftIO $ putStrLn(show e) -- error with conditional
 
+-- Print all available functionality/commands
 process (Help) = do
     liftIO $ putStrLn ("List of program operations: ")
     liftIO $ putStrLn ("  - a + b {Addition}")
@@ -116,9 +134,15 @@ process (Help) = do
     liftIO $ putStrLn ("  - :load fileName {Load a File}")
     liftIO $ putStrLn ("  - :help {Show Program Commands")
 
+-- Quit the program
 process (Quit) = do liftIO $ putStrLn ("Exiting program")
                     liftIO exitSuccess
 
+{- Load File
+ -
+ - Function to process a file name and load the REPL loop if provided input
+ - is a valid option. Prints the appropriate error should any arrive
+-}
 loadFile :: Name -> IO ()
 loadFile file = do
     result <- tryJust (guard . isDoesNotExistError) $
@@ -128,17 +152,11 @@ loadFile file = do
         Right (Left err) -> do putStrLn $ show err
         Right (Right newState) -> return ()
 
-remember :: Command -> StateT Env (ExceptT Error IO) ()
-remember cmd = do
-    st <- get
-    put $ st { history = cmd : history st }
-
-repeatCmds :: Command -> [Command]
-repeatCmds (Block cmds) = concatMap repeatCmds cmds
-repeatCmd cmd = [cmd]
-
 {- Read, Eval, Print Loop. This reads and parses the input using the pCommand parser.
-    calls 'process' to process the command. 'process' calls 'repl' when done, so the system loops. -}
+ - calls 'process' to process the command. 'process' calls 'repl' when done, so the system loops.
+ - Loop takes a boolean condition each run to check if the input being provided is user input or
+ - file read. If file read, no additional output is printed.
+ -}
 repl :: Bool -> REPL ()
 repl continue = do
     input <- case continue of
@@ -156,6 +174,9 @@ repl continue = do
                 [(Left err, _)] -> liftIO $ putStrLn (show err)
             repl continue
 
+{- Run REPL is the initial call to run the REPL loop when the program is first run. Splits
+ - the REPL loop segmentation into two processes to avoid IO/StateT collision errors.
+ -}
 runREPL :: Env -> IO ()
 runREPL initState = do
     result <- evalStateT (runInputT hlSettings (runExceptT (repl True))) initState
