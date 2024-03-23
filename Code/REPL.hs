@@ -149,7 +149,7 @@ repl continue = do
             True -> liftIO $ putStrLn "EOF, goodbye"
             False -> liftIO $ putStr ""
         Just line -> do
-            let parsed = parse pCommand (dropWhile isSpace (dropWhileEnd isSpace line))
+            let parsed = parse pCommand (dropWhile isSpace (dropWhileEnd isSpace line)) -- trim surrounding whitespace
             case parsed of
                 [(Right cmd, "")] -> process cmd
                 [(Right cmd, rem)] -> liftIO $ putStrLn ("ParseError: Unconsumed input '" ++ rem ++ "'")
