@@ -62,17 +62,17 @@ checkEval2Float opExpr fResult x y = if (isNaN expectedFloat || isInfinite expec
  - When given 1 or 2 floats, returns a float
  - When given anything else, gives a value error
  -
- - Additionally, if the float operation returns NaN, then we expect a MathError
+ - Additionally, if the float operation returns NaN or Infinity, then we expect a MathError
  -}
 checkMixedMath :: TwoArgOperation
                   -> TwoIntOperation -> TwoFloatOperation
                   -> Value -> Value
                   -> Property
-checkMixedMath expr intOp floatOp (IntVal a)   (IntVal b)   = checkEval2Int   expr intOp a b
-checkMixedMath expr intOp floatOp (FloatVal a) (IntVal b)   = checkEval2Float expr floatOp a (fromIntegral b)
-checkMixedMath expr intOp floatOp (IntVal a)   (FloatVal b) = checkEval2Float expr floatOp (fromIntegral a) b
-checkMixedMath expr intOp floatOp (FloatVal a) (FloatVal b) = checkEval2Float expr floatOp a b
-checkMixedMath expr intOp floatOp a b = checkEvalValueError $ expr (Val a) (Val b)
+checkMixedMath expr intOp floatOp (IntVal a)   (IntVal b)   = collect ("int int") $ checkEval2Int   expr intOp a b
+checkMixedMath expr intOp floatOp (FloatVal a) (IntVal b)   = collect ("float int") $ checkEval2Float expr floatOp a (fromIntegral b)
+checkMixedMath expr intOp floatOp (IntVal a)   (FloatVal b) = collect ("int float") $ checkEval2Float expr floatOp (fromIntegral a) b
+checkMixedMath expr intOp floatOp (FloatVal a) (FloatVal b) = collect ("float float") $ checkEval2Float expr floatOp a b
+checkMixedMath expr intOp floatOp a b = collect ("bad args") $ checkEvalValueError $ expr (Val a) (Val b)
 
 {- Addition a + b -}
 prop_testEvalAdd :: Value -> Value -> Property
@@ -117,12 +117,12 @@ prop_testPow (IntVal a) (IntVal n) | n < 0 = discard
                                    | otherwise = checkEval2Int Pow (^) a n
 prop_testPow a n = checkMixedMath Pow (^) (**) a n
 
--- Skip sqrt-like as complex for negative a
-prop_testEvalPowFloatReg :: Positive Float -> Float -> Property
-prop_testEvalPowFloatReg (Positive a) x = a /= 0 ==> evalBasic expr === Right expected
+-- Test raising an int to a negative power (should result in a float)
+prop_testEvalPowNegativeInt :: Int -> Negative Int -> Property
+prop_testEvalPowNegativeInt a (Negative n) = a /= 0 ==> evalBasic expr === Right expected
     where
-        expr = Pow (Val (FloatVal a)) (Val (FloatVal x))
-        expected = FloatVal (a**x)
+        expr = Pow (Val (IntVal a)) (Val (IntVal n))
+        expected = FloatVal $ (fromIntegral a) ** (fromIntegral n)
 
 -- 0^x positive
 prop_testEvalPow0IntPos :: Positive Int -> Property
@@ -151,8 +151,8 @@ isVNonNeg v = case v of
                     FloatVal f -> f >= 0
                     IntVal i -> i >= 0
 
-prop_testEvalPosNum :: NVal -> Property
-prop_testEvalPosNum (NVal v) = isVNonNeg v ==> evalBasic expr === Right v
+prop_testEvalAbsPosNum :: NVal -> Property
+prop_testEvalAbsPosNum (NVal v) = isVNonNeg v ==> evalBasic expr === Right v
     where expr = Abs (Val v)
 
 prop_testEvalAbsNegInt :: Negative Int -> Bool

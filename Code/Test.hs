@@ -13,8 +13,8 @@ import BinaryTree
 instance Arbitrary Value where
     arbitrary = frequency [
         (1, fmap (StrVal) arbitrary),
-        (3, fmap (IntVal) arbitrary),
-        (3, fmap (FloatVal) arbitrary),
+        (4, fmap (IntVal) arbitrary),
+        (4, fmap (FloatVal) arbitrary),
         (1, fmap (BoolVal) arbitrary)
         ]
 
