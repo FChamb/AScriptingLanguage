@@ -73,22 +73,17 @@ pCommand = do t <- identifier
                   block <- pBlock
                   return (Right (Repeat i [block]))
            ||| do string "if"
-                  space
+                  symbol "("
                   condition <- pExpr
-                  space
+                  symbol ")" 
                   string "then"
                   space
-                  thenBlock <- pCommand
+                  thenBlock <- pBlock
                   space
                   string "else"
                   space
-                  elseBlock <- pCommand
-                  case thenBlock of
-                      Right thenCmd ->
-                          case elseBlock of
-                              Right elseCmd -> return (Right (If condition thenCmd elseCmd))
-                              Left err -> return (Left err)
-                      Left err -> return (Left err)
+                  elseBlock <- pBlock
+                  return (Right (If condition thenBlock elseBlock))
            ||| do string ":load"
                   f <- fileName
                   return (Right (LoadFile f))
