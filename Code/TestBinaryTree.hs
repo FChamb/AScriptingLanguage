@@ -2,6 +2,7 @@
 module TestBinaryTree where
 
 import Data.List (nubBy)
+import Data.Either (isLeft)
 
 import Test.QuickCheck
 
@@ -37,18 +38,19 @@ instance Show BasicStr where
 prop_testInsertEmpty :: (BasicStr, Int) -> Property
 prop_testInsertEmpty p = (insert p Empty === Tree p Empty Empty)
 
-prop_testTreeContains :: TreeNodes -> Property
-prop_testTreeContains (TreeNodes l) = conjoin $ map (expectInTree tree) l
-    where
-        tree = treeFromList l
-        expectInTree :: Tree (String, Int) -> (String, Int) -> Property
-        expectInTree tree (k,_) = counterexample (show k) (contains k tree)
-
 prop_testTreeValue :: TreeNodes -> Property
 prop_testTreeValue (TreeNodes l) = conjoin $ map (expectValInTree tree) l
     where
         tree = treeFromList l
         expectValInTree tree (k,v) = value k tree === Right v
+
+prop_testTreeNotValue :: TreeNodes -> BasicStr -> Property
+prop_testTreeNotValue (TreeNodes l) (BasicStr k) =
+    case (lookup k l) of
+        Just _ -> discard
+        Nothing -> property $ isLeft (value k tree)
+    where
+        tree = treeFromList l
 
 return []
 runBinaryTreeTests = $quickCheckAll

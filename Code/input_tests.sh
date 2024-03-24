@@ -37,12 +37,9 @@ function runTest {
     fi
 }
 
-expectedBasicPrintVar="""[]
-> a=1+2
-[(\"a\",3)]
+expectedBasicPrintVar="""> a=1+2
 > print a
 3
-[(\"a\",3)]
 > EOF, goodbye"""
 
 function basicPrintVar {
@@ -50,13 +47,10 @@ function basicPrintVar {
     write "print a"
 }
 
-expectedBasicInput="""[]
-> test = input
+expectedBasicInput="""> test = input
 hello world
-[(\"test\",hello world)]
 > print test
 hello world
-[(\"test\",hello world)]
 > EOF, goodbye"""
 
 function basicInput {
@@ -65,20 +59,16 @@ function basicInput {
     write "print test"
 }
 
-expectedAddMul="""[]
-> print 2+4*6
+expectedAddMul="""> print 2+4*6
 26
-[]
 > EOF, goodbye"""
 
 function addMul {
     write "print 2+4*6"
 }
 
-expectedAddMulBracketed="""[]
-> print (2+4)*6
+expectedAddMulBracketed="""> print (2+4)*6
 36
-[]
 > EOF, goodbye"""
 
 function addMulBracketed {
