@@ -13,7 +13,7 @@ hlSettings :: MonadIO m => Settings (StateT Env m )
 hlSettings = setComplete completions defaultSettings
 
 -- Operations should act as separators
-hl_separators = " ,*^/"
+hl_separators = " (,*^/"
 
 completions :: MonadIO m => CompletionFunc (StateT Env m)
 completions = completeWordWithPrev Nothing hl_separators completor
@@ -26,7 +26,7 @@ completor prev cur = if null prev then completeFirst cur
 
 -- Commands that can easily be completed
 firstWordCompletions :: [String]
-firstWordCompletions = ["print", "repeat", "quit", ":load", ":help", "for", "while", "if"]
+firstWordCompletions = ["print", "repeat", "quit", ":load", ":help", "for", "while", "if", "def"]
 
 completeFirst :: Monad m => String -> m [Completion]
 completeFirst s = return $ map simpleCompletion matching
