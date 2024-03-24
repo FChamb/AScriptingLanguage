@@ -56,7 +56,14 @@ completeFunc s = do
     let funcs = map (\s -> s ++ "(") allMatches
     return $ map (\s -> (simpleCompletion s) {isFinished=False}) funcs
 
--- Current input -> Tree -> possible completions
+{- Finds all tab-completions for the current input string given a binary tree
+ - ordered by the strings.
+ -
+ - We use the the knowledge that the binary tree is ordered to reduce the
+ - number of comparisons we have to make.
+ -
+ - Current input -> Tree -> possible completions
+ -}
 completeFromTree :: String -> Tree (String, a) -> [String]
 completeFromTree s Empty = []
 completeFromTree s (Tree (k, _) left right) = case compare k s of

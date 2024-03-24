@@ -128,7 +128,15 @@ eval vars fs (Sqrt a) = do
                      | otherwise -> Right (FloatVal (sqrt flt))
         _ -> Left $ ValueError "Cannot calculate square root of given value"
 
--- User defined functions
+{- User defined functions
+ -
+ - Here we:
+ - 1. Evaluate all arguments passed in
+ - 2. Zip their values with the argument names they should be bound to
+ - 3. Turn the list of arguments and values into a tree
+ - 4. Evaluate all the statements in the function to get a new state
+ - 5. Evaluate the final expression, returning its value
+ -}
 eval vars fs (CallUserFunc name args) = do
     (UserFunc fargs stmts retExpr) <- case value name fs of
         Left _ -> Left $ ValueError ("Function " ++ name ++ " doesn not exist")
