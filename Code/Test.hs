@@ -87,8 +87,8 @@ prop_getUndefinedVar (ValidName name) = case evalBasic (Var name) of
 -- More advanced expression tree tests
 
 -- Try addition using variables
-prop_evalAddWithVars :: (ValidName, Int) -> (ValidName, Int) -> Bool
-prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = eval vars Empty expr == Right (IntVal expected)
+prop_evalAddWithVars :: (ValidName, Int) -> (ValidName, Int) -> Property
+prop_evalAddWithVars (ValidName na, a) (ValidName nb, b) = na /= nb ==> eval vars Empty expr === Right (IntVal expected)
     where
         vars = treeFromList [(na, IntVal a), (nb, IntVal b)]
         expr = Add (Var na) (Var nb)
