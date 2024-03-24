@@ -124,7 +124,7 @@ process (Help) = do
     liftIO $ putStrLn ("  - pow(a,b) {Power}")
     liftIO $ putStrLn ("  - sqrt(a) {Square Root}")
     liftIO $ putStrLn ("  - a = 1 {Assign variables}")
-    liftIO $ putStrLn ("  - if x then y else z {If then else conditionals")
+    liftIO $ putStrLn ("  - if (x) then {y} else {z} {If then else conditionals")
     liftIO $ putStrLn ("List of program commands: ")
     liftIO $ putStrLn ("  - print ... {Print the Command}")
     liftIO $ putStrLn ("  - repeat n {} {Repeat an operation, n times")
