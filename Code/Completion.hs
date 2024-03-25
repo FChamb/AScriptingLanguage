@@ -16,13 +16,17 @@ hlSettings = setComplete completions defaultSettings
 hl_separators = " (,*^/"
 
 completions :: MonadIO m => CompletionFunc (StateT Env m)
-completions = completeWordWithPrev Nothing hl_separators completor
+completions = fallbackCompletion (completeWordWithPrev Nothing " " loadCompletor)
+                                 (completeWordWithPrev Nothing hl_separators completor)
+
 
 completor :: MonadIO m => String -> String -> (StateT Env m) [Completion]
 completor prev cur = if null prev then completeFirst cur
                      else completeVarOrFunc cur
-                     --else if (reverse prev) == ":load" then listFiles cur
 
+loadCompletor :: MonadIO m => String -> String -> m [Completion]
+loadCompletor prev cur = if (reverse prev) == ":load " then listFiles cur
+                         else return []
 
 -- Commands that can easily be completed
 firstWordCompletions :: [String]
