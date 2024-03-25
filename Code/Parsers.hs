@@ -47,7 +47,7 @@ pCommand = do t <- identifier
                   space
                   e <- pExpr
                   return (Right (Print e))
-           ||| do string "quit"
+           ||| do string ":quit"
                   return (Right Quit)
            ||| do pFunc
            ||| do string "while"
