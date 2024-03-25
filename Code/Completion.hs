@@ -26,7 +26,7 @@ completor prev cur = if null prev then completeFirst cur
 
 -- Commands that can easily be completed
 firstWordCompletions :: [String]
-firstWordCompletions = ["print", "repeat", "quit", ":load", ":help", "for", "while", "if", "def"]
+firstWordCompletions = ["print", "repeat", ":quit", ":load", ":help", "for", "while", "if", "def"]
 
 completeFirst :: Monad m => String -> m [Completion]
 completeFirst s = return $ map simpleCompletion matching

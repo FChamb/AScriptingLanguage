@@ -14,9 +14,19 @@ To run the project, use the script in the Code directory:
 ```console
 ./run.sh
 ```
+
+# Tests #
+To run the tests, use the script in the Code directory:
+```console
+./test.sh
+```
 or run with cabal:
 ```console
-cabal run
+cabal test
+```
+To run manual tests via file input, use the script in the Code directory:
+```console
+./runTests.sh
 ```
 
 # Usage #
@@ -86,9 +96,17 @@ x = 5
 while (x > 0) {print x*5; x=x-1}
 ```
 ## Defining new functions
+Define a function with the `def` command.
+A function is pure the final statement is the returned expression.
 ```console
 def square(a) { pow(a,2) }
 print square(4)
+```
+
+You can also assign variables before the final expression.
+```console
+def pythagorus(a,b) { c2 = pow(a,2) + pow(b,2); sqrt(c2) }
+print pythagorus(3, 4)
 ```
 ## Loading a file
 ```console
@@ -97,20 +115,6 @@ print square(4)
 ## Quit and Help
 ```console
 :help -- show program commands 
-quit  -- exit program
+:quit  -- exit program
 ```
 
-# Tests #
-To run the tests, use the script in the Code directory:
-```console
-./test.sh
-```
-or run with cabal:
-```console
-cabal test
-```
-
-To run manual tests via file input, use the script in the Code directory:
-```console
-./runTests.sh
-```
